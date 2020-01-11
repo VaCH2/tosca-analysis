@@ -1,6 +1,6 @@
 import pandas as pd
-from clustering.datatrans import Dataset
-from sklearn.pipeline import Pipeline
+import numpy as np
+from datatrans import Dataset
 from sklearn.preprocessing import normalize
 from sklearn.cluster import KMeans 
 from sklearn.cluster import MeanShift
@@ -13,8 +13,8 @@ from sklearn.metrics import davies_bouldin_score
 from sklearn.metrics import calinski_harabasz_score
 #from sklearn.metrics import homogeneity_score #Deze kan niet omdat je hier een ground truth voor nodig hebt
 
-df = Dataset(10, True).getDf
-df = normalize(df)
+original_df = Dataset(7, False).getDf
+df = normalize(original_df)
 
 k_sizes = [2,3,4,5,6,7,8]
 
@@ -42,4 +42,25 @@ def calculate_cluster_score(df, k_sizes, algos, metrics):
                 scores.loc[(algo_name, metric_name), k] = score
     return scores
 
+def create_cluster_dfs(original_df, algos, k):
+    new_dfs = {''.join([algo_name]) : original_df for algo_name in algos.keys()}
+    cluster_dfs = {}
+    for algo_name, algo_df in new_dfs.items():
+        algo_df['cluster'] = clustering(algo_df, algos[algo_name], k)
+        for k_th in range(k):
+            cluster_dfs[algo_name + '_cluster_{}'.format(k_th)] = algo_df.loc[algo_df['cluster'] == k_th]
+    return cluster_dfs
 
+def get_cluster_stats(df_dict):
+    result = pd.DataFrame()
+    for name, df in df_dict.items():
+        result[name + '_count'] = df.apply(lambda x: np.count_nonzero(x))
+        result[name + '_mean'] = df.apply(lambda x: np.mean(x))
+        result[name + '_std'] = df.apply(lambda x: np.std(x))
+    return result
+
+
+#%% Based on the cluster score, it turns out k=2 is the optimal cluster size
+clusters = create_cluster_dfs(original_df, algos, 2)
+results = get_cluster_stats(clusters)
+results.to_excel('cluster_stats.xlsx')
