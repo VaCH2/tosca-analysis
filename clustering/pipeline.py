@@ -81,15 +81,11 @@ def get_cluster_stats(df_dict):
     return result
 
 
-#%% Based on the cluster score, it turns out k=2 is the optimal cluster size
+# %%
+k_scores = calculate_cluster_score(df, k_sizes, algos, metrics)
+nonk_scores = calculate_nonk_cluster_score(df, nonk_algos, metrics)
+
+#%% Based on the cluster score, it turns out k=2 and k=... is the optimal cluster size
 clusters = create_cluster_dfs(original_df, algos, 2)
 results = get_cluster_stats(clusters)
 results.to_excel('cluster_stats.xlsx')
-
-#%%
-original_df
-
-# %%
-nonk_clustering(df, DBSCAN)
-
-# %%
