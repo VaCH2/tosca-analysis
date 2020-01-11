@@ -10,11 +10,11 @@ class Dataset():
 
         try:
             if example == False:
-                with open('..\\tosca-metrics\\results\\industry_metric_results_{}.json'.format(version)) as f:
+                with open('..\\..\\tosca-metrics\\results\\industry_metric_results_{}.json'.format(version)) as f:
                     self.data = json.load(f)
 
             if example == True:
-                with open('..\\tosca-metrics\\results\\example_metric_results_{}.json'.format(version)) as f:
+                with open('..\\..\\tosca-metrics\\results\\example_metric_results_{}.json'.format(version)) as f:
                     self.data = json.load(f)
 
             self.cleaned_data = self.__cleaning()   
