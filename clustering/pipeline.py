@@ -14,23 +14,6 @@ from sklearn.metrics import silhouette_score
 from sklearn.metrics import davies_bouldin_score
 from sklearn.metrics import calinski_harabasz_score
 
-original_df = Dataset(7, False).getDf
-df = normalize(original_df)
-
-k_sizes = [2,3,4,5,6,7,8]
-
-algos = {'kmeans' : KMeans, \
-    'specclu' : SpectralClustering, 
-    'aggclu' : AgglomerativeClustering} 
-    
-nonk_algos = {'meanshift' : MeanShift, \
-    'dbscan' : DBSCAN,
-    'optics' : OPTICS} 
-
-metrics = {'silhouette' : silhouette_score, \
-    'davies' : davies_bouldin_score, 
-    'calinski' : calinski_harabasz_score}
-
 def clustering(df, algo, k):
     model = algo(n_clusters=k)
     return model.fit_predict(df)
@@ -84,6 +67,24 @@ def get_cluster_stats(df_dict):
         result[name + '_std'] = df.apply(lambda x: np.std(x))
     return result
 
+
+
+original_df = Dataset(0, 'all').getDf
+df = normalize(original_df)
+
+k_sizes = [2,3,4,5,6,7,8]
+
+algos = {'kmeans' : KMeans, \
+    'specclu' : SpectralClustering, 
+    'aggclu' : AgglomerativeClustering} 
+    
+nonk_algos = {'meanshift' : MeanShift, \
+    'dbscan' : DBSCAN,
+    'optics' : OPTICS} 
+
+metrics = {'silhouette' : silhouette_score, \
+    'davies' : davies_bouldin_score, 
+    'calinski' : calinski_harabasz_score}
 
 # %%
 k_scores = calculate_cluster_score(df, k_sizes, algos, metrics)

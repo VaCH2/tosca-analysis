@@ -4,17 +4,21 @@ import json
 
 class Dataset():
 
-    def __init__(self, version, example=False):
+    def __init__(self, version, dataset='industry'):
         """Initialize a new dataset containing industry files by default. 
         Version defines the version of the calculated metrics."""
 
         try:
-            if example == False:
+            if dataset == 'industry':
                 with open('..\\..\\tosca-metrics\\results\\industry_metric_results_{}.json'.format(version)) as f:
                     self.data = json.load(f)
 
-            if example == True:
+            elif dataset == 'example':
                 with open('..\\..\\tosca-metrics\\results\\example_metric_results_{}.json'.format(version)) as f:
+                    self.data = json.load(f)
+
+            elif dataset == 'all':
+                with open('..\\..\\tosca-metrics\\results\\all_metric_results_{}.json'.format(version)) as f:
                     self.data = json.load(f)
 
             self.cleaned_data = self.__cleaning()   
@@ -35,8 +39,8 @@ class Dataset():
         
         #Drop NaN rows, columns with a constant value, Error message or a high correlation   
         df = df.drop(labels=(df.filter(regex='msg').columns), axis=1)
-        rejected = ['nc_max', 'nc_mean', 'nc_min', 'ngro_count', 'nkeys_count', 'np_count', 
-        'np_max', 'np_mean', 'np_median', 'np_min', 'npol_count', 'nr_count', 'nrt_count', 'nw_count']
+        rejected = ['nc_max', 'nc_mean', 'nc_min', 'ngro_count', 'np_count', 
+        'np_max', 'np_mean', 'np_median', 'np_min', 'npol_count', 'nr_count', 'nrt_count', 'nw_count' ]#'nkeys_count']
         df = df.drop(labels=rejected, axis=1)
         df = df.dropna()
         
