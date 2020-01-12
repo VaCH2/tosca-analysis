@@ -53,22 +53,26 @@ def calculate_cluster_score(df, k_sizes, algos, metrics):
 
 def calculate_nonk_cluster_score(df, nonk_algos, metrics):
     index = pd.MultiIndex.from_product(iterables=[nonk_algos.keys(), metrics.keys()], names=['algo', 'evaluation'])
-    scores = pd.DataFrame(index=index, columns=range(10))
+    scores = pd.DataFrame(index=index, columns=range(20))
 
     for algo_name, algo in nonk_algos.items():
         result = nonk_clustering(df, algo)
         max_cluster = max(np.unique(result))
         for metric_name, metric in metrics.items():
-            score = metric(df, result)
-            scores.loc[(algo_name, metric_name), max_cluster] = score
+            if max_cluster > 0:
+                score = metric(df, result)
+                scores.loc[(algo_name, metric_name), max_cluster] = score
     return scores
 
-def create_cluster_dfs(original_df, algos, k):
+def create_cluster_dfs(original_df, algos, k, func=clustering):
     new_dfs = {''.join([algo_name]) : original_df for algo_name in algos.keys()}
     cluster_dfs = {}
     for algo_name, algo_df in new_dfs.items():
-        algo_df['cluster'] = clustering(algo_df, algos[algo_name], k)
-        for k_th in range(k):
+        if func == clustering:
+            algo_df['cluster'] = func(algo_df, algos[algo_name], k)
+        elif func == nonk_clustering:
+            algo_df['cluster'] = func(algo_df, algos[algo_name])
+        for k_th in range(-1,k):
             cluster_dfs[algo_name + '_cluster_{}'.format(k_th)] = algo_df.loc[algo_df['cluster'] == k_th]
     return cluster_dfs
 
@@ -85,7 +89,15 @@ def get_cluster_stats(df_dict):
 k_scores = calculate_cluster_score(df, k_sizes, algos, metrics)
 nonk_scores = calculate_nonk_cluster_score(df, nonk_algos, metrics)
 
-#%% Based on the cluster score, it turns out k=2 and k=... is the optimal cluster size
+#%% Based on the cluster score, it turns out k=2 is the optimal cluster size
 clusters = create_cluster_dfs(original_df, algos, 2)
 results = get_cluster_stats(clusters)
 results.to_excel('cluster_stats.xlsx')
+
+#%% Based on the nonk cluster score, it turns out k=17 the max cluster size
+clusters = create_cluster_dfs(original_df, nonk_algos, 17, func=nonk_clustering)
+results = get_cluster_stats(clusters)
+results.to_excel('nonk_cluster_stats.xlsx')
+
+
+# %%
