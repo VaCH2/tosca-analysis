@@ -70,7 +70,7 @@ def get_cluster_stats(df_dict):
 
 
 original_df = Dataset(0, 'all').getDf
-df = normalize(original_df)
+df = original_df #normalize(original_df)
 
 k_sizes = [2,3,4,5,6,7,8]
 
@@ -93,12 +93,51 @@ nonk_scores = calculate_nonk_cluster_score(df, nonk_algos, metrics)
 #%% Based on the cluster score, it turns out k=2 is the optimal cluster size
 clusters = create_cluster_dfs(original_df, algos, 2)
 results = get_cluster_stats(clusters)
-results.to_excel('cluster_stats.xlsx')
+#results.to_excel('cluster_stats.xlsx')
 
 #%% Based on the nonk cluster score, it turns out k=17 the max cluster size
 clusters = create_cluster_dfs(original_df, nonk_algos, 17, func=nonk_clustering)
 results = get_cluster_stats(clusters)
 results.to_excel('nonk_cluster_stats.xlsx')
 
-
 # %%
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+
+def create_total_cluster_dfs(original_df, algos, k, func=clustering):
+    new_dfs = {''.join([algo_name]) : original_df for algo_name in algos.keys()}
+    cluster_dfs = {}
+    for algo_name, algo_df in new_dfs.items():
+        if func == clustering:
+            algo_df['cluster'] = func(algo_df, algos[algo_name], k)
+        elif func == nonk_clustering:
+            algo_df['cluster'] = func(algo_df, algos[algo_name])
+        cluster_dfs[algo_name] = algo_df
+    return cluster_dfs
+
+def feature_extraction(df, predictor):
+    y = df['cluster']
+    X = df.drop(columns=['cluster'])
+    X_train, X_test, y_train, y_test = train_test_split(X, y)
+
+    predictor.fit(X=X_train, y=y_train)
+    score = predictor.score(X_test, y_test)
+    imps = predictor.feature_importances_
+    feature_importances = sorted(zip(X_test, imps), reverse=True, key=lambda x: x[1])
+    feature_importances.append(('pred_score', score))        
+    return feature_importances
+
+#%%
+all_clusters = create_total_cluster_dfs(original_df, algos, 2)
+all_nonk_clusters = create_total_cluster_dfs(original_df, nonk_algos, 7, func=nonk_clustering)
+all_clusters.update(all_nonk_clusters)
+    
+#%%
+
+feature_importances = pd.DataFrame()
+
+for clu_algo, df in all_clusters.items():
+    importance = feature_extraction(df, RandomForestClassifier())
+    feature_importances[clu_algo] = importance
+
+feature_importances
