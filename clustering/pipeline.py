@@ -2,6 +2,7 @@
 
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 from datatrans import Dataset
 from sklearn.preprocessing import normalize
 from sklearn.cluster import KMeans 
@@ -13,6 +14,11 @@ from sklearn.cluster import OPTICS
 from sklearn.metrics import silhouette_score
 from sklearn.metrics import davies_bouldin_score
 from sklearn.metrics import calinski_harabasz_score
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+%config InlineBackend.figure_format='retina'
 
 def clustering(df, algo, k):
     model = algo(n_clusters=k)
@@ -68,42 +74,6 @@ def get_cluster_stats(df_dict):
     return result
 
 
-
-original_df = Dataset(0, 'all').getDf
-df = original_df #normalize(original_df)
-
-k_sizes = [2,3,4,5,6,7,8]
-
-algos = {'kmeans' : KMeans, \
-    'specclu' : SpectralClustering, 
-    'aggclu' : AgglomerativeClustering} 
-    
-nonk_algos = {'meanshift' : MeanShift, \
-    'dbscan' : DBSCAN,
-    'optics' : OPTICS} 
-
-metrics = {'silhouette' : silhouette_score, \
-    'davies' : davies_bouldin_score, 
-    'calinski' : calinski_harabasz_score}
-
-# %%
-k_scores = calculate_cluster_score(df, k_sizes, algos, metrics)
-nonk_scores = calculate_nonk_cluster_score(df, nonk_algos, metrics)
-
-#%% Based on the cluster score, it turns out k=2 is the optimal cluster size
-clusters = create_cluster_dfs(original_df, algos, 2)
-results = get_cluster_stats(clusters)
-#results.to_excel('cluster_stats.xlsx')
-
-#%% Based on the nonk cluster score, it turns out k=17 the max cluster size
-clusters = create_cluster_dfs(original_df, nonk_algos, 17, func=nonk_clustering)
-results = get_cluster_stats(clusters)
-results.to_excel('nonk_cluster_stats.xlsx')
-
-# %%
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
-
 def create_total_cluster_dfs(original_df, algos, k, func=clustering):
     new_dfs = {''.join([algo_name]) : original_df for algo_name in algos.keys()}
     cluster_dfs = {}
@@ -127,13 +97,61 @@ def feature_extraction(df, predictor):
     feature_importances.append(('pred_score', score))        
     return feature_importances
 
-#%%
+#%%#########################################################################
+##       Load the dataset, transform and keep dataframe structure         ##
+############################################################################
+
+original_df = Dataset(0, 'all').getDf
+scaler = StandardScaler()
+scaled_values = scaler.fit_transform(original_df)
+original_df.loc[:,:] = scaled_values
+
+k_sizes = [2,3,4,5,6,7,8]
+
+algos = {'kmeans' : KMeans, \
+    'specclu' : SpectralClustering, 
+    'aggclu' : AgglomerativeClustering} 
+    
+nonk_algos = {'meanshift' : MeanShift, \
+    'dbscan' : DBSCAN,
+    'optics' : OPTICS} 
+
+metrics = {'silhouette' : silhouette_score, \
+    'davies' : davies_bouldin_score, 
+    'calinski' : calinski_harabasz_score}
+
+#%%#########################################################################
+##       evaluate cluster performance for 3 performance measures          ##
+############################################################################
+
+k_scores = calculate_cluster_score(df, k_sizes, algos, metrics)
+nonk_scores = calculate_nonk_cluster_score(df, nonk_algos, metrics)
+
+#%%#########################################################################
+##      Obtain count, mean, std for each individual cluster in each       ##
+##      algo, based on the found ideal number for k if possible           ##
+############################################################################
+
+sep_k_clusters = create_cluster_dfs(original_df, algos, 2)
+sep_k_stats = get_cluster_stats(sep_k_clusters)
+sep_k_stats.to_excel('sep_k_cluster_stats.xlsx')
+
+sep_nonk_clusters = create_cluster_dfs(original_df, nonk_algos, 17, func=nonk_clustering)
+sep_nonk_stats = get_cluster_stats(sep_nonk_clusters)
+sep_nonk_stats.to_excel('sep_nonk_cluster_stats.xlsx')
+
+#%%#########################################################################
+##       Perform all cluster algos on dataset and store in dict           ##
+############################################################################
+
+#HIER GAAT IETS MIS!!! 
 all_clusters = create_total_cluster_dfs(original_df, algos, 2)
 all_nonk_clusters = create_total_cluster_dfs(original_df, nonk_algos, 7, func=nonk_clustering)
 all_clusters.update(all_nonk_clusters)
     
-#%%
-
+#%%#########################################################################
+##                 Perform feature importance analysis                    ##
+############################################################################
 feature_importances = pd.DataFrame()
 
 for clu_algo, df in all_clusters.items():
@@ -141,3 +159,62 @@ for clu_algo, df in all_clusters.items():
     feature_importances[clu_algo] = importance
 
 feature_importances
+
+#%%#########################################################################
+##                 PCA analysis and cluster visualisation                 ##
+############################################################################
+#from  https://medium.com/@dmitriy.kavyazin/principal-component-analysis-and-k-means-clustering-to-visualize-a-high-dimensional-dataset-577b2a7a5fe2
+# and  https://towardsdatascience.com/pca-using-python-scikit-learn-e653f8989e60 
+
+# Create a PCA instance: pca
+pca = PCA(n_components=20)
+principalComponents = pca.fit_transform(X_std)
+
+# Save components to a DataFrame
+PCA_components = pd.DataFrame(principalComponents)
+
+# Plot the explained variances
+features = range(pca.n_components_)
+plt.bar(features, pca.explained_variance_ratio_, color='black')
+plt.xlabel('PCA features')
+plt.ylabel('variance %')
+plt.xticks(features)
+
+# Check visually for the existance of clusters
+plt.scatter(PCA_components[0], PCA_components[1], alpha=.1, color='black')
+plt.xlabel('PCA 1')
+plt.ylabel('PCA 2')
+
+# %% Visualize per clustering algorithm
+#for clu_algo, df in all_clusters.items():
+clu_algo = 'kmeans'
+df = all_clusters[clu_algo]
+print(df['cluster'].unique)
+df = df.reset_index(drop=False)
+finalDf = pd.concat([PCA_components, agg_df[['cluster']]], axis = 1)
+
+#Plot the 2 component PCA with the found clusters by the algorithm
+fig = plt.figure(figsize = (4,4))
+ax = fig.add_subplot(1,1,1) 
+ax.set_xlabel('Principal Component 1', fontsize = 15)
+ax.set_ylabel('Principal Component 2', fontsize = 15)
+ax.set_title('{}'.format(clu_algo), fontsize = 20)
+
+clusters = [-1, 0, 1]
+colors = ['r', 'g', 'b']
+for cluster, color in zip(clusters,colors):
+    indicesToKeep = finalDf['cluster'] == cluster
+    ax.scatter(finalDf.loc[indicesToKeep, 0]
+            , finalDf.loc[indicesToKeep, 1]
+            , c = color
+            , s = 50)
+ax.legend(clusters)
+ax.grid()
+
+
+
+
+# %% plot with 
+
+
+# %%
