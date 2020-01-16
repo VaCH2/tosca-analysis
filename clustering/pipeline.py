@@ -20,11 +20,19 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 %config InlineBackend.figure_format='retina'
 
+def scale_df(df):
+    scaler = StandardScaler()
+    scaled_values = scaler.fit_transform(df)
+    df.loc[:,:] = scaled_values
+    return df
+
 def clustering(df, algo, k):
+    df = scale_df(df)
     model = algo(n_clusters=k)
     return model.fit_predict(df)
 
 def nonk_clustering(df, algo):
+    df = scale_df(df)
     model = algo()
     return model.fit_predict(df)
 
@@ -98,13 +106,10 @@ def feature_extraction(df, predictor):
     return feature_importances
 
 #%%#########################################################################
-##       Load the dataset, transform and keep dataframe structure         ##
+##         Load the dataset, scale and keep dataframe structure           ##
 ############################################################################
 
-original_df = Dataset(0, 'all').getDf
-scaler = StandardScaler()
-scaled_values = scaler.fit_transform(original_df)
-original_df.loc[:,:] = scaled_values
+original_df = Dataset(1, 'all').getDf
 
 k_sizes = [2,3,4,5,6,7,8]
 
@@ -124,19 +129,22 @@ metrics = {'silhouette' : silhouette_score, \
 ##       evaluate cluster performance for 3 performance measures          ##
 ############################################################################
 
-k_scores = calculate_cluster_score(df, k_sizes, algos, metrics)
-nonk_scores = calculate_nonk_cluster_score(df, nonk_algos, metrics)
+k_scores = calculate_cluster_score(original_df, k_sizes, algos, metrics)
+nonk_scores = calculate_nonk_cluster_score(original_df, nonk_algos, metrics)
+nonk_scores = nonk_scores[nonk_scores.columns[~nonk_scores.isnull().all()]]
 
 #%%#########################################################################
 ##      Obtain count, mean, std for each individual cluster in each       ##
 ##      algo, based on the found ideal number for k if possible           ##
 ############################################################################
 
+#TODO hier gebruikt ie nu de normalized data, zorgen dat clusteren met de
+#normalized data gebeurd maar dat de statistieken over de originele set worden uitgerekend
 sep_k_clusters = create_cluster_dfs(original_df, algos, 2)
 sep_k_stats = get_cluster_stats(sep_k_clusters)
 sep_k_stats.to_excel('sep_k_cluster_stats.xlsx')
 
-sep_nonk_clusters = create_cluster_dfs(original_df, nonk_algos, 17, func=nonk_clustering)
+sep_nonk_clusters = create_cluster_dfs(original_df, nonk_algos, 35, func=nonk_clustering)
 sep_nonk_stats = get_cluster_stats(sep_nonk_clusters)
 sep_nonk_stats.to_excel('sep_nonk_cluster_stats.xlsx')
 
