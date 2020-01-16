@@ -115,7 +115,10 @@ def feature_extraction(df, predictor):
 ##         Load the dataset, scale and keep dataframe structure           ##
 ############################################################################
 
-original_df = Dataset(1, 'all').getDf
+original_df = Dataset(2, 'all').getDf
+#original_df = original_df[['cdnt_count', 'cdrt_count', 'cdat_count', 
+#'cdct_count', 'cddt_count', 'cdgt_count', 'cdit_count', 'cdpt_count', 'ttb_check']]
+
 
 k_sizes = [2,3,4,5,6,7,8]
 
@@ -180,7 +183,7 @@ feature_importances.to_excel('feature_importance.xlsx')
 # and  https://towardsdatascience.com/pca-using-python-scikit-learn-e653f8989e60 
 
 # Create a PCA instance: pca
-pca = PCA(n_components=20)
+pca = PCA(n_components=5)
 X_std = scale_df(original_df.copy())
 X_std.values
 principalComponents = pca.fit_transform(X_std)
@@ -203,6 +206,7 @@ plt.ylabel('PCA 2')
 
 # %% Visualize per clustering algorithm
 for clu_algo, df in all_clusters.items():
+    print(df['cluster'].value_counts())
     df = df.reset_index(drop=False)
     finalDf = pd.concat([PCA_components, df[['cluster']]], axis = 1)
 
@@ -223,5 +227,3 @@ for clu_algo, df in all_clusters.items():
                 , s = 50)
     ax.legend(clusters)
     ax.grid()
-
-# %%
