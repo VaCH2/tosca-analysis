@@ -21,13 +21,13 @@ class Data():
             self.df = pickle.load(open('../temp_data/{}_{}_df'.format(metrics_type, dataset), 'rb'))
         except (OSError, IOError) as e:
 
-            files = self.get_yaml_files(datasets_dir[dataset])
-            json_data = self.json_data(metrics_type, files)
-            self.raw_df = self.to_df(json_data)
-            pickle.dump(self.raw_df, open('../temp_data/{}_{}_raw_df'.format(metrics_type, dataset), 'wb'))
+            #files = self.get_yaml_files(datasets_dir[dataset])
+            #json_data = self.json_data(metrics_type, files)
+            #self.raw_df = self.to_df(json_data)
+            #pickle.dump(self.raw_df, open('../temp_data/{}_{}_raw_df'.format(metrics_type, dataset), 'wb'))
 
             self.df = self.cleaning(self.raw_df)
-            pickle.dump(self.raw_df, open('../temp_data/{}_{}_df'.format(metrics_type, dataset), 'wb'))
+            pickle.dump(self.df, open('../temp_data/{}_{}_df'.format(metrics_type, dataset), 'wb'))
 
 
     def get_yaml_files(self, path):
