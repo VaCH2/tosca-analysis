@@ -1,10 +1,8 @@
 from data import Data
 
-class Alldata(Data):
-    def __init__(self, path):
-        x = self.get_yaml_files(path)
-        print(len(x))
-
-
-test = r'C:\Users\s145559\OneDrive - TU Eindhoven\School\JADS\Jaar 2\Thesis\RADON PROJECT\Data\\1. Total Examples'
-hup = Alldata(test)
+datasets = ['all' ,'industry' , 'example' ,'a4c', 'forge', 'puccini']
+metric_types = ['general', 'tosca', 'tosca_and_general']
+             
+for ds in datasets:
+    for met in metric_types:
+        Data(met, ds)

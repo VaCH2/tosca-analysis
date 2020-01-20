@@ -2,3 +2,5 @@ tosca_analysis
 .ipynb_checkpoints
 .vscode
 results
+temp_data
+
