@@ -24,8 +24,8 @@ class Preprocessing():
 
 #df = pickle.load(open('../temp_data/{}_{}_raw_df'.format('tosca_and_general', 'all'), 'rb'))
 
-df = Data('tosca_and_general', 'all').df
-test = Selection(df)
+# df = Data('tosca_and_general', 'all').df
+# test = Selection(df)
 
 # for dat in ['all', 'industry', 'example', 'a4c', 'forge', 'puccini']:
 #     for met in ['general', 'tosca', 'tosca_and_general']:
