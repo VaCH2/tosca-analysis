@@ -68,14 +68,8 @@ class Data():
     def cleaning(self, df):        
         #Drop NaN rows and error columns, and make numeric
         df = df.drop(labels=(df.filter(regex='msg').columns), axis=1)
-        cols = df.columns
-        df[cols] = df[cols].apply(pd.to_numeric, errors='coerce')
+        cols = df.select_dtypes(include=['bool']).columns
+        df[cols] = df[cols].astype(int)
         df = df.dropna()
         return df        
-
-
-
-        
-         
-
     
