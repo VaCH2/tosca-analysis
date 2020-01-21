@@ -4,13 +4,14 @@ from data import Data
 import pickle
 
 class Preprocessing():
-    def __init__(self, data, constants=False, corr=False, pca=False, anomalies=False):
+    def __init__(self, data, constants=False, corr=None, pca=False, anomalies=False):
+        '''For constants and corr please provide the list of to be dropped columns'''
         self.df = data.df
         self.anomalypercentage = None
-        if corr == True:
-            self.df = self.df.drop(self.df[data.corrfeatures], axis=1)
+        if corr != None:
+            self.df = self.df.drop(self.df[corr], axis=1)
         if constants == True:
-            self.df = self.df.drop(self.df[data.constants], axis=1)
+            self.df = self.df.drop(self.df[constants], axis=1)
         
         if anomalies != None:
             self.anomalypercentage = self.filter_anomalies()
