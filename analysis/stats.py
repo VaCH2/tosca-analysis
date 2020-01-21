@@ -3,15 +3,12 @@ import numpy as np
 from data import Data
 import pickle
 
-class Preprocessing():
-    def __init__(self, df, corr=False, pca=False):
+class Stats():
+    def __init__(self, df):
         self.df = df
         self.sparsity = self.calc_sparsity()
         self.constants = self.constantvalues()
-        if corr == True:
-            self.df = self.correlation()
-        if pca == True:
-            self.df = self.pca()
+        self.corrfeatures = self.correlation()
 
     def calc_sparsity(self):
         '''Calculate the sparsity of the selected data'''
@@ -31,8 +28,7 @@ class Preprocessing():
         corr = self.df.corr(method='pearson').abs()
         upper = corr.where(np.triu(np.ones(corr.shape), k=1).astype(np.bool))
         high_correlations = [column for column in upper.columns if any(upper[column] > 0.90)]
-        df = self.df.drop(self.df[high_correlations], axis=1)
-        return df
+        return high_correlations
 
     def pca(self):
         pass
@@ -40,5 +36,5 @@ class Preprocessing():
     def ietsmetresultaten(self):
         pass
 
-df = Data('tosca_and_general', 'all').df
-test = Preprocessing(df, 'hoi')
+df = Data('tosca_and_general', 'all', 'topology')
+#test = Preprocessing(df, 'hoi')
