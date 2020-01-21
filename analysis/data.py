@@ -4,7 +4,7 @@ from toscametrics import calculator
 import pickle
 
 class Data():
-    def __init__(self, metrics_type, dataset):
+    def __init__(self, metrics_type, dataset, file_type='all'):
         datasets_dir = {
             'all'       :   r'C:\Users\s145559\OneDrive - TU Eindhoven\School\JADS\Jaar 2\Thesis\RADON PROJECT\Data\\4. All',
             'industry'  :   r'C:\Users\s145559\OneDrive - TU Eindhoven\School\JADS\Jaar 2\Thesis\RADON PROJECT\Data\\2. Total Industry',
@@ -13,8 +13,14 @@ class Data():
             'forge'     :   r'C:\Users\s145559\OneDrive - TU Eindhoven\School\JADS\Jaar 2\Thesis\RADON PROJECT\Data\\Forge',
             'puccini'   :   r'C:\Users\s145559\OneDrive - TU Eindhoven\School\JADS\Jaar 2\Thesis\RADON PROJECT\Data\\Puccini'
         }
+
+        file_types = ['all', 'topology', 'custom', 'all', 'none']
+
         if not dataset in datasets_dir.keys():
             raise ValueError('Enter a valid dataset (all, industry, example, a4c, forge, puccini)')
+
+        if not file_type in file_types:
+            raise ValueError('Enter a valid file type (all, topology, custom, all, none)')
 
         try:
             self.raw_df = pickle.load(open('../temp_data/{}_{}_raw_df'.format(metrics_type, dataset), 'rb'))
@@ -32,6 +38,10 @@ class Data():
             self.df = self.cleaning(self.raw_df)
             pickle.dump(self.df, open('../temp_data/{}_{}_df'.format(metrics_type, dataset), 'wb'))
 
+        self.typefilterpercentage = None
+
+        if file_type != 'all':
+            self.typefilterpercentage = self.filter_filetype(file_type)
 
     def get_yaml_files(self, path):
         extensions = ['.yaml', '.yml']
@@ -71,5 +81,36 @@ class Data():
         cols = df.select_dtypes(include=['bool']).columns
         df[cols] = df[cols].astype(int)
         df = df.dropna()
-        return df        
+        return df
+
+    
+    def filter_filetype(self, filetype):
+        '''Filter on the file type. A file could be a service template, or containing
+        custom type definitions, both or none of these two. It assigns the filtered df
+        to self.df and assings the filtered percentage to typefilterpercentage'''
+
+        if not filetype in ['topology', 'custom', 'both', 'none']:
+            raise ValueError('Enter a valid file type (topology, custom, both, none)')
+
+        cus_df = self.df[['cdnt_count', 'cdrt_count', 'cdat_count', 
+        'cdct_count', 'cddt_count', 'cdgt_count', 'cdit_count', 'cdpt_count']]
+
+        non_df = cus_df[(cus_df == 0).all(1)] 
+        self.df['custom_def'] = [False if x in non_df.index else True for x in self.df.index]
+
+        if filetype == 'topology':
+            result = self.df[(self.df['ttb_check'] == 1) & (self.df['custom_def'] == False)]
+
+        if filetype == 'custom':
+            result = self.df[(self.df['ttb_check'] == 0) & (self.df['custom_def'] == True)]
+
+        if filetype == 'both':
+            result = self.df[(self.df['ttb_check'] == 1) & (self.df['custom_def'] == True)]
+
+        if filetype == 'none':
+            result = self.df[(self.df['ttb_check'] == 0) & (self.df['custom_def'] == False)]
+
+        result = result.drop('custom_def', axis=1)
+        self.df = result
+        return len(result)/len(cus_df)        
     
