@@ -35,6 +35,7 @@ class Data():
             self.df = pickle.load(open('../temp_data/{}_{}_df'.format(metrics_type, dataset), 'rb'))
         
         except (OSError, IOError) as e:
+            print('gaan we doen!')
             self.df = self.cleaning(self.raw_df)
             pickle.dump(self.df, open('../temp_data/{}_{}_df'.format(metrics_type, dataset), 'wb'))
 
@@ -75,10 +76,11 @@ class Data():
         df = pd.DataFrame.from_dict(flat_dict, orient='index')
         return df
 
-    def cleaning(self, df):        
+    def cleaning(self, df):       
         #Drop NaN rows and error columns, and make numeric
         df = df.drop(labels=(df.filter(regex='msg').columns), axis=1)
-        cols = df.select_dtypes(include=['bool']).columns
+        df = df.dropna()
+        cols = df.select_dtypes(include=['bool', 'object']).columns
         df[cols] = df[cols].astype(int)
         df = df.dropna()
         return df
