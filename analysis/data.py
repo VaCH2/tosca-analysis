@@ -35,7 +35,6 @@ class Data():
             self.df = pickle.load(open('../temp_data/{}_{}_df'.format(metrics_type, dataset), 'rb'))
         
         except (OSError, IOError) as e:
-            print('gaan we doen!')
             self.df = self.cleaning(self.raw_df)
             pickle.dump(self.df, open('../temp_data/{}_{}_df'.format(metrics_type, dataset), 'wb'))
 
