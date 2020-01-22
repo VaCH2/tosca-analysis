@@ -8,10 +8,18 @@ class Preprocessing():
         '''For constants and corr please provide the list of to be dropped columns'''
         self.df = data.df
         self.anomalypercentage = None
+        to_drop = []
         if corr != None:
-            self.df = self.df.drop(self.df[corr], axis=1)
+            to_drop.extend(corr)
+
         if constants != None:
-            self.df = self.df.drop(self.df[constants], axis=1)
+            to_drop.extend(constants)
+        
+        to_drop = list(set(to_drop))
+        # print('len dropped columns: ', len(to_drop))
+        # print('dropped columns: ', to_drop)
+        
+        self.df = self.df.drop(to_drop, axis=1)
         
         if anomalies != None:
             self.anomalypercentage = self.filter_anomalies()
