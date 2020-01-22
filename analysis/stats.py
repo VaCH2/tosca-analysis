@@ -9,6 +9,7 @@ class Stats():
         self.sparsity = self.calc_sparsity()
         self.constants = self.constantvalues()
         self.corrfeatures = self.correlation()
+        self.descriptives = self.df.describe()
 
     def calc_sparsity(self):
         '''Calculate the sparsity of the selected data'''
