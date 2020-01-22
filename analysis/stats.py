@@ -9,7 +9,11 @@ class Stats():
         self.sparsity = self.calc_sparsity()
         self.constants = self.constantvalues()
         self.corrfeatures = self.correlation()
-        self.descriptives = self.df.describe(include='all')
+        self.mean = self.calc_mean()
+        self.nonzero = self.calc_nonzero()
+        self.min = self.calc_min()
+        self.max = self.calc_max()
+
 
     def calc_sparsity(self):
         '''Calculate the sparsity of the selected data'''
@@ -30,6 +34,30 @@ class Stats():
         high_correlations = [column for column in upper.columns if any(upper[column] > 0.90)]
         return high_correlations
 
+    def calc_mean(self):
+        df = self.df
+        result = pd.DataFrame()
+        result['mean'] = df.apply(lambda x: np.mean(x))
+        return result
 
-df = Data('tosca_and_general', 'all', 'topology')
+    def calc_nonzero(self):
+        df = self.df
+        result = pd.DataFrame()
+        result['% nonzero'] = df.apply(lambda x: (np.count_nonzero(x) / len(df.index)))
+        return result
+
+    def calc_min(self):
+        df = self.df
+        result = pd.DataFrame()
+        result['min'] = df.apply(lambda x: np.min(x))
+        return result
+
+    def calc_max(self):
+        df = self.df
+        result = pd.DataFrame()
+        result['max'] = df.apply(lambda x: np.max(x))
+        return result
+
+
+#df = Data('tosca_and_general', 'all', 'topology')
 #test = Preprocessing(df, 'hoi')
