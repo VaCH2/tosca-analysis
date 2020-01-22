@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from scipy.stats import mannwhitneyu
+from scipy.stats import ks_2samp
 from statsmodels.stats.multitest import multipletests
 
 class Significance():
