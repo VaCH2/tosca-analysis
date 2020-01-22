@@ -22,6 +22,9 @@ class Data():
         if not file_type in file_types:
             raise ValueError('Enter a valid file type (all, topology, custom, all, none)')
 
+        self.name = dataset
+        self.type = file_type
+
         try:
             self.raw_df = pickle.load(open('../temp_data/{}_{}_raw_df'.format(metrics_type, dataset), 'rb'))
             
