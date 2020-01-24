@@ -1,10 +1,12 @@
-#%%
-
 import pandas as pd
 from data import Data
 from stats import Stats
 from prep import Preprocessing
 from significance import Significance
+import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
+%config InlineBackend.figure_format='retina'
+from utils import scale_df
 
 data = Data('tosca_and_general', 'all')
 data = Stats(data)
@@ -144,8 +146,41 @@ def significance_analysis(datasets):
 # significance_analysis(datasets)
 
 #hier nog ff iets op verzinnen dat je er duidelijk uit krijgt.
-x = get_corrs(named_data)
-#x.style.set_properties(subset=['features'], **{'width': '300px'})
-x
+#x = get_corrs(named_data)
 
-# %%
+
+# Hier ff de pca per verschillende dataset laten zien
+# Kan helpen bij het bepalen van evt. clusters 
+def pca_insight(dataset):
+    original_df = dataset.df
+
+    # Create a PCA instance: pca
+    pca = PCA(n_components=5)
+    X_std = scale_df(original_df.copy())
+    X_std.values
+    principalComponents = pca.fit_transform(X_std)
+
+    # Save components to a DataFrame
+    PCA_components = pd.DataFrame(principalComponents)
+
+    # Plot the explained variances
+    features = range(pca.n_components_)
+    plt.bar(features, pca.explained_variance_ratio_, color='black')
+    plt.xlabel('PCA features')
+    plt.ylabel('variance %')
+    plt.xticks(features)
+    plt.show()
+
+    # Check visually for the existance of clusters
+    plt.scatter(PCA_components[0], PCA_components[1], alpha=.1, color='black')
+    plt.xlabel('PCA 1')
+    plt.ylabel('PCA 2')
+    plt.show()
+
+#datasets = [a4c_data, puc_data, for_data]
+#datasets = [ex_data, ind_data]
+datasets = [top_data, cus_data, both_data]
+
+for dataset in datasets:
+    pca_insight(dataset)
+    plt.close
