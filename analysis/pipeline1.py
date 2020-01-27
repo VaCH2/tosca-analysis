@@ -7,6 +7,9 @@ import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 %config InlineBackend.figure_format='retina'
 from utils import scale_df
+from utils import flatlist
+from utils import allin2
+from utils import allin3
 
 data = Data('tosca_and_general', 'all')
 data = Stats(data)
@@ -41,27 +44,7 @@ named_data = {'all' : data, 'a4c' : a4c_data, 'puc' : puc_data, 'for' : for_data
 #datasets = [ex_data, ind_data]
 #datasets = [top_data, cus_data, both_data]
 
-def flatlist(nested_list):
-    return [item for sublist in nested_list for item in sublist]
 
-def allin2(nested_list):
-    all = set()
-
-    for element in flatlist(nested_list):
-        if element in nested_list[0]:
-            if element in nested_list[1]:
-                all.add(element)
-    return list(all)
-
-def allin3(nested_list):
-    all = set()
-
-    for element in flatlist(nested_list):
-        if element in nested_list[0]:
-            if element in nested_list[1]:
-                if element in nested_list[2]:
-                    all.add(element)
-    return list(all)
 
 
 def get_corrs(named_data):
