@@ -3,9 +3,16 @@ import numpy as np
 from data import Data
 import pickle
 
+
 class Stats():
     def __init__(self, data):
-        self.df = data.df
+        '''Enter dataclass of pandas dataframe'''
+        
+        if isinstance(data, Data):
+            self.df = data.df
+        elif isinstance(data, pd.DataFrame):
+            self.df = data
+
         self.sparsity = self.calc_sparsity()
         self.constants = self.constantvalues()
         self.corrfeatures = self.correlation()
