@@ -6,18 +6,19 @@ import pickle
 class Data():
     def __init__(self, metrics_type, dataset, file_type='all'):
         datasets_dir = {
-            'all'       :   r'C:\Users\s145559\OneDrive - TU Eindhoven\School\JADS\Jaar 2\Thesis\RADON PROJECT\Data\\4. All',
-            'industry'  :   r'C:\Users\s145559\OneDrive - TU Eindhoven\School\JADS\Jaar 2\Thesis\RADON PROJECT\Data\\2. Total Industry',
-            'example'   :   r'C:\Users\s145559\OneDrive - TU Eindhoven\School\JADS\Jaar 2\Thesis\RADON PROJECT\Data\\1. Total Examples',
-            'a4c'       :   r'C:\Users\s145559\OneDrive - TU Eindhoven\School\JADS\Jaar 2\Thesis\RADON PROJECT\Data\\A4C',
-            'forge'     :   r'C:\Users\s145559\OneDrive - TU Eindhoven\School\JADS\Jaar 2\Thesis\RADON PROJECT\Data\\Forge',
-            'puccini'   :   r'C:\Users\s145559\OneDrive - TU Eindhoven\School\JADS\Jaar 2\Thesis\RADON PROJECT\Data\\Puccini'
+            'all'       :   r'C:\Users\s145559\OneDrive - TU Eindhoven\School\JADS\Jaar 2\Thesis\RADON PROJECT\Data\\1. All',
+            'industry'  :   r'C:\Users\s145559\OneDrive - TU Eindhoven\School\JADS\Jaar 2\Thesis\RADON PROJECT\Data\\1. All\\Total Industry',
+            'example'   :   r'C:\Users\s145559\OneDrive - TU Eindhoven\School\JADS\Jaar 2\Thesis\RADON PROJECT\Data\\1. All\\Total Examples',
+            'repos'     :   r'C:\Users\s145559\OneDrive - TU Eindhoven\School\JADS\Jaar 2\Thesis\RADON PROJECT\Data\\Repositories,
+            'a4c'       :   r'C:\Users\s145559\OneDrive - TU Eindhoven\School\JADS\Jaar 2\Thesis\RADON PROJECT\Data\\Repositories\\A4C',
+            'forge'     :   r'C:\Users\s145559\OneDrive - TU Eindhoven\School\JADS\Jaar 2\Thesis\RADON PROJECT\Data\\Repositories\\Forge',
+            'puccini'   :   r'C:\Users\s145559\OneDrive - TU Eindhoven\School\JADS\Jaar 2\Thesis\RADON PROJECT\Data\\Repositories\\Puccini'
         }
 
         file_types = ['all', 'topology', 'custom', 'both', 'none']
 
         if not dataset in datasets_dir.keys():
-            raise ValueError('Enter a valid dataset (all, industry, example, a4c, forge, puccini)')
+            raise ValueError('Enter a valid dataset (all, industry, example, repos, a4c, forge, puccini)')
 
         if not file_type in file_types:
             raise ValueError('Enter a valid file type (all, topology, custom, both, none)')
