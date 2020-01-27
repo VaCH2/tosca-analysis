@@ -3,7 +3,6 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from datatrans import Dataset
 from sklearn.preprocessing import normalize
 from sklearn.cluster import KMeans 
 from sklearn.cluster import MeanShift
@@ -19,6 +18,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 %config InlineBackend.figure_format='retina'
+from data import Data
 
 def scale_df(df):
     copy_df = df.copy()
@@ -84,6 +84,15 @@ def get_cluster_stats(df_dict):
         result[name + '_std'] = df.apply(lambda x: np.std(x))
     return result
 
+def cluster_balance(cluster_column, threshold):
+    '''Function which calculates the proportion of each cluster as a percentage of the total size.
+    It returns True if every cluster passes the size threshold. Otherwise False.'''
+    
+    count = cluster_column.value_counts()
+    percentages = [count.iloc[ix] / count.sum() > threshold for ix in range(len(count))]
+    
+    return all(elem == True for elem in percentages)
+
 
 def create_total_cluster_dfs(df, algos, k, func=clustering):
     copy_df = df.copy()
@@ -95,7 +104,8 @@ def create_total_cluster_dfs(df, algos, k, func=clustering):
             algo_df['cluster'] = func(algo_df, algos[algo_name], k)
         elif func == nonk_clustering:
             algo_df['cluster'] = func(algo_df, algos[algo_name])
-        cluster_dfs[algo_name] = algo_df
+        if cluster_balance(algo_df['cluster'], 0.05):
+            cluster_dfs[algo_name] = algo_df
     return cluster_dfs
 
 def feature_extraction(df, predictor):
@@ -115,7 +125,7 @@ def feature_extraction(df, predictor):
 ##         Load the dataset, scale and keep dataframe structure           ##
 ############################################################################
 
-original_df = Dataset(2, 'all').getDf
+original_df = Data('tosca_and_general', 'all').df
 #original_df = original_df[['cdnt_count', 'cdrt_count', 'cdat_count', 
 #'cdct_count', 'cddt_count', 'cdgt_count', 'cdit_count', 'cdpt_count', 'ttb_check']]
 
