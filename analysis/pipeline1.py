@@ -194,7 +194,7 @@ def check_purpose(df):
 
 
 #DROP ANOMALIES 
-#%%
+#%% Moet dit niet naar de preprocessing class?
 def delete_anomalies(datasets, anomalyset):
     ix = AnomalyDetector(anomalyset).outliers
     print('totaal aantal anomalies: ', len(ix))
