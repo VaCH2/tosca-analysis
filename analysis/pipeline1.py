@@ -10,6 +10,7 @@ from utils import scale_df
 from utils import flatlist
 from utils import allin2
 from utils import allin3
+from anomaly import AnomalyDetector
 
 data = Data('tosca_and_general', 'all')
 data = Stats(data)
@@ -39,10 +40,6 @@ both_data = Stats(both_data)
 
 named_data = {'all' : data, 'a4c' : a4c_data, 'puc' : puc_data, 'for' : for_data, 'ex' : ex_data, 'ind' : ind_data, 'top' : top_data, 'cus' : cus_data, 'both': both_data}
 
-
-#datasets = [a4c_data, puc_data, for_data]
-#datasets = [ex_data, ind_data]
-#datasets = [top_data, cus_data, both_data]
 
 
 
@@ -126,7 +123,7 @@ def significance_analysis(datasets):
 
 # file_stats = get_stats(datasets)
 # file_stats.to_excel('file_stats.xlsx')
-# significance_analysis(datasets)
+
 
 #hier nog ff iets op verzinnen dat je er duidelijk uit krijgt.
 #x = get_corrs(named_data)
@@ -160,10 +157,37 @@ def pca_insight(dataset):
     plt.ylabel('PCA 2')
     plt.show()
 
-#datasets = [a4c_data, puc_data, for_data]
-#datasets = [ex_data, ind_data]
-datasets = [top_data, cus_data, both_data]
 
-for dataset in datasets:
-    pca_insight(dataset)
-    plt.close
+# for dataset in datasets:
+#     pca_insight(dataset)
+#     plt.close
+
+
+#DROP ANOMALIES 
+#%%
+def delete_anomalies(datasets, anomalyset):
+    ix = AnomalyDetector(anomalyset).outliers
+    print('totaal aantal anomalies: ', len(ix))
+    filtered_datasets = []
+    for dataset in datasets:
+        to_drop = [i for i in ix.index if i in dataset.df.index]
+        print('originele grootte df: ', dataset.df.shape[0])
+        print('aantal anomalies: ', len(to_drop))
+        new_df = dataset.df.drop(to_drop)
+        print('nieuwe lengte: ', new_df.shape[0])
+
+        filtered_datasets.append(Stats(new_df))
+
+    return filtered_datasets
+
+
+datasets = [ex_data, ind_data]
+significance_analysis(datasets)
+
+
+# %%
+
+new_dfs = delete_anomalies(datasets, Stats(Data('tosca_and_general', 'all')))
+significance_analysis(new_dfs)
+
+# %%
