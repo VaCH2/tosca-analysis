@@ -15,7 +15,9 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
+
 from data import Data
+from prep import Preprocessing
 
 class Clustering():
 
@@ -42,9 +44,19 @@ class Clustering():
         if PCA:
             df = self.__perform_PCA(self.df)
 
-        self.n_clusters = self.__create_total_cluster_dfs(df, algos, k, func='k')
-        self.nonk_clusters = self.__create_total_cluster_dfs(df, nonk_algos, k, func='nonk')
+        try:
+            self.n_clusters = pickle.load(open('../temp_data/tosca_and_general_all_n_clusters', 'rb'))
+                
+        except (OSError, IOError) as e:
+            self.n_clusters = self.__create_total_cluster_dfs(df, algos, k, func='k')
+            pickle.dump(self.n_clusters, open('../temp_data/tosca_and_general_all_n_clusters', 'wb'))
 
+        try:
+            self.nonk_clusters = pickle.load(open('../temp_data/tosca_and_general_all_nonk_clusters', 'rb'))
+                
+        except (OSError, IOError) as e:
+            self.nonk_clusters = self.__create_total_cluster_dfs(df, nonk_algos, k, func='nonk')
+            pickle.dump(self.nonk_clusters, open('../temp_data/tosca_and_general_all_nonk_clusters', 'wb'))
 
     def __scale_df(self, df):
         copy_df = df.copy()
@@ -102,4 +114,18 @@ class Clustering():
 
 
 data = Data('tosca_and_general', 'all')
-inst = Clustering(data, 2, 0.05, PCA=True)
+data = Preprocessing(data, chi=True)
+inst = Clustering(data, 2, 0.05, PCA=False)
+
+#%%
+import pickle
+pickle.dump(data.df, open('../temp_data/{}_{}_braycurtisdistance'.format('tosca_and_general', 'all'), 'wb'))
+
+#%%
+
+try:
+    self.df = pickle.load(open('../temp_data/{}_{}_braycurtisdistance'.format(metrics_type, dataset), 'rb'))
+    
+except (OSError, IOError) as e:
+    self.df = self.__transform_distance()
+    pickle.dump(self.df, open('../temp_data/{}_{}_braycurtisdistance'.format(metrics_type, dataset), 'wb'))
