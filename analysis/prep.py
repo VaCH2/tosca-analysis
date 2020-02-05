@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from data import Data
-import utils
+from utils import scale_df
 import pickle
 from scipy.stats import chi2_contingency as chi2
 from sklearn.metrics import pairwise_distances
