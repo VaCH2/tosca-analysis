@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from data import Data
+import utils
 import pickle
 from scipy.stats import chi2_contingency as chi2
 from sklearn.metrics import pairwise_distances
@@ -43,14 +44,17 @@ class Preprocessing():
 
 
     def __transform_distance(self, customdistance):
-        data = self.df.to_numpy()
+        df = self.df.copy()
+        scaled = scale_df(df)
 
         if customdistance == 'spearman':
-            distances, pval = spearmanr(data)
-            matrix = pd.DataFrame(data=distances, index=self.df.index, columns=self.df.index)
+            matrix = pd.DataFrame(index=self.df.index, columns=self.df.index)
+            combs = [ ((x,y), spearmanr(scaled.loc[[x], :].to_numpy().flatten(),scaled.loc[[y], :].to_numpy().flatten())) for x in list(self.df.index) for y in list(self.df.index)]
+            for element in combs:
+                matrix.loc[element[0][0], element[0][1]] = element[1][0]
 
         else:
-            distances = pairwise_distances(data, metric=customdistance)
+            distances = pairwise_distances(scaled, metric=customdistance)
             matrix = pd.DataFrame(data=distances, index=self.df.index, columns=self.df.index)
 
         # matrix = pd.DataFrame(index=self.df.index, columns=self.df.index)
@@ -68,6 +72,3 @@ class Preprocessing():
     def filter_anomalies(self):
         return 0
 
-
-data = Data('tosca_and_general', 'all')
-prep = Preprocessing(data, chi=True)
