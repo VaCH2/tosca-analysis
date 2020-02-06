@@ -114,18 +114,13 @@ class Clustering():
 
 
 data = Data('tosca_and_general', 'all')
-data = Preprocessing(data, chi=True)
+data = Preprocessing(data, customdistance=True)
 inst = Clustering(data, 2, 0.05, PCA=False)
 
 #%%
 import pickle
 pickle.dump(data.df, open('../temp_data/{}_{}_braycurtisdistance'.format('tosca_and_general', 'all'), 'wb'))
+ #%%
 
-#%%
 
-try:
-    self.df = pickle.load(open('../temp_data/{}_{}_braycurtisdistance'.format(metrics_type, dataset), 'rb'))
-    
-except (OSError, IOError) as e:
-    self.df = self.__transform_distance()
-    pickle.dump(self.df, open('../temp_data/{}_{}_braycurtisdistance'.format(metrics_type, dataset), 'wb'))
+# %%
