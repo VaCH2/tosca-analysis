@@ -113,14 +113,6 @@ class Clustering():
         return cluster_dfs
 
 
-data = Data('tosca_and_general', 'all')
-data = Preprocessing(data, customdistance=True)
-inst = Clustering(data, 2, 0.05, PCA=False)
-
-#%%
-import pickle
-pickle.dump(data.df, open('../temp_data/{}_{}_braycurtisdistance'.format('tosca_and_general', 'all'), 'wb'))
- #%%
-
-
-# %%
+# data = Data('tosca_and_general', 'all')
+# data = Preprocessing(data, customdistance=True)
+# inst = Clustering(data, 2, 0.05, PCA=False)
