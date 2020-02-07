@@ -96,7 +96,7 @@ def clustering(array, algo, k):
     if algo == 'kmedoids':
         label_dict = {i : [] for i in range(len(array))}
         i=0
-        while i < 50:
+        while i < 200:
             m, labels = kMedoids(array, k)
 
             for key, value in label_dict.items():
@@ -108,13 +108,14 @@ def clustering(array, algo, k):
             value = np.array(value)
             counts = np.bincount(value)
             labels[key] = np.argmax(counts)
+        print('Iterations: ', i)
 
         return np.array(labels)
 
-    if algo == 'agglo':
+    elif algo == 'agglo':
         model = AgglomerativeClustering(n_clusters=k, affinity='precomputed', linkage='average')
         return model.fit_predict(array)
-    if algo == 'gm':
+    elif algo == 'gm':
         model = GaussianMixture(n_components=k)
         return model.fit_predict(array)
 
@@ -137,7 +138,7 @@ def calculate_cluster_score(df, k_sizes, algos, metrics):
 k_sizes = [2,3,4,5,6,7,8]
 
 algos = {'kmedoids' : 'kmedoids', \
-    'agglo' : 'agglo',
+    'agglo' : 'agglo', \
     'gm' : 'gm'}
 
 
@@ -146,7 +147,7 @@ metrics = {'silhouette' : silhouette_score, \
     'calinski' : calinski_harabasz_score}
 
 data = Data('tosca_and_general', 'all')
-dist_dict = {'spearman' : Preprocessing(data, customdistance='spearman'),
+dist_dict = {#'spearman' : Preprocessing(data, customdistance='spearman'),
     'braycurtis' : Preprocessing(data, customdistance='braycurtis'),
     'cosine' : Preprocessing(data, customdistance='cosine'),
     'l1' : Preprocessing(data, customdistance='l1')}
@@ -155,9 +156,9 @@ dist_dict = {'spearman' : Preprocessing(data, customdistance='spearman'),
 results = {}
 evals = {}
 
-#TIJDELIJK
-data = Data('tosca_and_general', 'all')
-dist_dict = {'braycurtis' : Preprocessing(data, customdistance='braycurtis')}
+# #TIJDELIJK
+# data = Data('tosca_and_general', 'all')
+# dist_dict = {'cosine' : Preprocessing(data, customdistance='cosine')}
 
 for key, data in dist_dict.items():
     # #tijdelijk
@@ -166,13 +167,13 @@ for key, data in dist_dict.items():
     # data = pairwise_distances(data, metric='cosine')
 
     try:
-        resu = clustering(data.df.to_numpy(), 'kmedoids', 3)
+        resu = clustering(data.df.to_numpy(), 'gm', 4)
         #resu = clustering(data, 'agglo', 4)
         unique, counts = np.unique(resu, return_counts=True)
         results[key] = resu #dict(zip(unique, counts))
     except Exception:
         results[key] = 'all in one cluster so error'
-        raise
+        
     
     # try:
     #     eva = calculate_cluster_score(data.df.to_numpy(), k_sizes, algos, metrics)
@@ -207,8 +208,9 @@ def get_stats(datasets):
 clu0 = ori_df[ori_df['cluster'] == 0]
 clu1 = ori_df[ori_df['cluster'] == 1]
 clu2 = ori_df[ori_df['cluster'] == 2]
+clu3 = ori_df[ori_df['cluster'] == 3]
 
-datasets = [Stats(clu0), Stats(clu1)]#, Stats(clu2)]
+datasets = [Stats(clu0), Stats(clu1), Stats(clu2), Stats(clu3)]
 results = get_stats(datasets)
 
 #%%#########################################################################
@@ -296,13 +298,13 @@ def compare_indexes_repo():
     df = all_data.copy()
     scaled = scale_df(df)
 
-    distances = pairwise_distances(scaled, metric='cosine')
+    distances = pairwise_distances(scaled, metric='braycurtis')
     matrix = pd.DataFrame(data=distances, index=all_data.index, columns=all_data.index)
 
 
 
 
-    resu = clustering(matrix.to_numpy(), 'kmedoids', 3)
+    resu = clustering(matrix.to_numpy(), 'gm', 4)
     df = all_data.iloc[[i for i, e in enumerate(resu) if e == 0], :]
 
     print('out of', len(df), 'from the first cluster: ')
@@ -337,6 +339,21 @@ def compare_indexes_repo():
     df = all_data.iloc[[i for i, e in enumerate(resu) if e == 2], :]
 
     print('out of', len(df), 'from the third cluster: ')
+
+    count = {'a4c' : 0, 'forge' : 0, 'puccini' : 0}
+    a4c = df.index.str.contains('A4C')
+    count['a4c'] = np.sum(a4c)
+    forge = df.index.str.contains('Forge')
+    count['forge'] = np.sum(forge)
+    puc = df.index.str.contains('Puccini')
+    count['puccini'] = np.sum(puc)
+
+    print(count)
+    print('\n')
+
+    df = all_data.iloc[[i for i, e in enumerate(resu) if e == 3], :]
+
+    print('out of', len(df), 'from the fourth cluster: ')
 
     count = {'a4c' : 0, 'forge' : 0, 'puccini' : 0}
     a4c = df.index.str.contains('A4C')
@@ -370,13 +387,13 @@ def compare_indexes_purpose():
     df = all_data.copy()
     scaled = scale_df(df)
 
-    distances = pairwise_distances(scaled, metric='cosine')
+    distances = pairwise_distances(scaled, metric='braycurtis')
     matrix = pd.DataFrame(data=distances, index=all_data.index, columns=all_data.index)
 
 
 
 
-    resu = clustering(matrix.to_numpy(), 'agglo', 2)
+    resu = clustering(matrix.to_numpy(), 'gm', 4)
     df = all_data.iloc[[i for i, e in enumerate(resu) if e == 0], :]
 
     print('out of', len(df), 'from the first cluster: ')
@@ -404,7 +421,31 @@ def compare_indexes_purpose():
     print(count)
     print('\n')
 
-    return all_data
+    df = all_data.iloc[[i for i, e in enumerate(resu) if e == 2], :]
+
+    print('out of', len(df), 'from the third cluster: ')
+
+    count = {'industry' : 0, 'example' : 0}
+    industry = df.index.str.contains('Total Industry')
+    count['industry'] = np.sum(industry)
+    example = df.index.str.contains('Total Examples')
+    count['example'] = np.sum(example)
+
+    print(count)
+    print('\n')
+
+    df = all_data.iloc[[i for i, e in enumerate(resu) if e == 3], :]
+
+    print('out of', len(df), 'from the fourth cluster: ')
+
+    count = {'industry' : 0, 'example' : 0}
+    industry = df.index.str.contains('Total Industry')
+    count['industry'] = np.sum(industry)
+    example = df.index.str.contains('Total Examples')
+    count['example'] = np.sum(example)
+
+    print(count)
+    print('\n')
 
 compare_indexes_purpose()
 
@@ -416,21 +457,17 @@ def compare_indexes_type():
     cus_data = Data('tosca_and_general', 'all', 'custom').df
     both_data = Data('tosca_and_general', 'all', 'both').df
 
-    print(len(top_data))
-    print(len(cus_data))
-    print(len(both_data))
-
     from sklearn.metrics import pairwise_distances
     from utils import scale_df
 
     df = all_data.copy()
     scaled = scale_df(df)
 
-    distances = pairwise_distances(scaled, metric='cosine')
+    distances = pairwise_distances(scaled, metric='braycurtis')
     matrix = pd.DataFrame(data=distances, index=all_data.index, columns=all_data.index)
 
 
-    resu = clustering(matrix.to_numpy(), 'agglo', 3)
+    resu = clustering(matrix.to_numpy(), 'gm', 4)
     df = all_data.iloc[[i for i, e in enumerate(resu) if e == 0], :]
 
     print('out of', len(df), 'from the first cluster: ')
@@ -450,6 +487,7 @@ def compare_indexes_type():
             both += 1
     
     print({'top' : top, 'cus' : cus, 'both' : both})
+    print('\n')
 
     
     df = all_data.iloc[[i for i, e in enumerate(resu) if e == 1], :]
@@ -471,6 +509,7 @@ def compare_indexes_type():
             both += 1
     
     print({'top' : top, 'cus' : cus, 'both' : both})
+    print('\n')
 
     
     df = all_data.iloc[[i for i, e in enumerate(resu) if e == 2], :]
@@ -490,15 +529,36 @@ def compare_indexes_type():
 
         if ix in both_data.index:
             both += 1
+
+    print({'top' : top, 'cus' : cus, 'both' : both})
+    print('\n')
+
+    df = all_data.iloc[[i for i, e in enumerate(resu) if e == 3], :]
+
+    print('out of', len(df), 'from the fourth cluster: ')
+
+    top = 0
+    cus = 0
+    both = 0
+
+    for ix in df.index:
+        if ix in top_data.index:
+            top += 1
+
+        if ix in cus_data.index:
+            cus += 1
+
+        if ix in both_data.index:
+            both += 1
     
     print({'top' : top, 'cus' : cus, 'both' : both})
+    print('\n')
 
     
-
-
-    
-    return all_data
 
 compare_indexes_type()
+
+# %%
+
 
 # %%
