@@ -89,20 +89,27 @@ def kMedoids(D, k, tmax=100):
 
 def clustering(array, algo, k):
     '''For k-Medoids an esemble is implemented of 100 iterations'''
-#NOG NIET AF!!!
 #Heeft dit wel zin? Want wat je nu ziet is dat ie elke keer een andere (random?) cluster pakt terwijl ze misschien
-#wel hetzelfde zijn, maar qua naam anders zijn.
+#wel hetzelfde zijn, maar qua naam anders zijn. Dit is echter voor alle punten, dus als het goed is komen deze 
+#als nog bij elkaar te zitten
 
     if algo == 'kmedoids':
         label_dict = {i : [] for i in range(len(array))}
         i=0
-        while i < 5:
+        while i < 50:
             m, labels = kMedoids(array, k)
 
             for key, value in label_dict.items():
                 value.append(labels[key])
             i += 1
-        return label_dict
+   
+        labels = [None] * len(array)
+        for key, value in label_dict.items():
+            value = np.array(value)
+            counts = np.bincount(value)
+            labels[key] = np.argmax(counts)
+
+        return np.array(labels)
 
     if algo == 'agglo':
         model = AgglomerativeClustering(n_clusters=k, affinity='precomputed', linkage='average')
@@ -148,6 +155,10 @@ dist_dict = {'spearman' : Preprocessing(data, customdistance='spearman'),
 results = {}
 evals = {}
 
+#TIJDELIJK
+data = Data('tosca_and_general', 'all')
+dist_dict = {'braycurtis' : Preprocessing(data, customdistance='braycurtis')}
+
 for key, data in dist_dict.items():
     # #tijdelijk
     # from sklearn.metrics import pairwise_distances
@@ -163,12 +174,12 @@ for key, data in dist_dict.items():
         results[key] = 'all in one cluster so error'
         raise
     
-    try:
-        eva = calculate_cluster_score(data.df.to_numpy(), k_sizes, algos, metrics)
-        #eva = calculate_cluster_score(data, k_sizes, algos, metrics)
-        evals[key] = eva
-    except Exception:
-        evals[key] = 'all in one cluster so error'
+    # try:
+    #     eva = calculate_cluster_score(data.df.to_numpy(), k_sizes, algos, metrics)
+    #     #eva = calculate_cluster_score(data, k_sizes, algos, metrics)
+    #     evals[key] = eva
+    # except Exception:
+    #     evals[key] = 'all in one cluster so error'
 
 #%%
 #HIER DE STATS PER CLUSTER EVEN BEKIJKEN, CELL HIERBOVEN IS NODIG!!
