@@ -1,12 +1,13 @@
 import pickle
 import seaborn as sns
 import matplotlib.pyplot as plt
+import pandas as pd
 
 
 class Vis():
     def __init__(self, df, savename='default'):
         '''Enter dataclass of pandas dataframe'''
-        if isinstance(data, pd.DataFrame):
+        if isinstance(df, pd.DataFrame):
             self.df = df
         else:
             print("wrong input")
@@ -27,6 +28,12 @@ class Vis():
                 y_label = y_axis.get_label()
                 y_label.set_visible(False)
             ax.axes.get_xaxis().set_visible(False)
+            print(col, ' non zero:', np.count_nonzero(df[col]))
 
-        plt.savefig('../temp_data/feature_boxplot_{}.png'.format(savename), dpi=300, bbox_inches='tight')
+        #plt.savefig('../temp_data/feature_boxplot_{}.png'.format(savename), dpi=300, bbox_inches='tight')
         plt.show()
+
+
+df = pickle.load(open('../temp_data/dfpluscluster_braycurtis', 'rb'))
+Vis(df)
+
