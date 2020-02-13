@@ -3,6 +3,7 @@ from data import Data
 import pandas as pd
 import numpy as np
 import random
+from vis import Vis
 
 
 from sklearn.metrics import silhouette_score
@@ -174,7 +175,7 @@ for key, data in dist_dict.items():
     except Exception:
         results[key] = 'all in one cluster so error'
         
-    
+    print(key, ':', np.unique(results[key], return_counts=True)    )
     # try:
     #     eva = calculate_cluster_score(data.df.to_numpy(), k_sizes, algos, metrics)
     #     #eva = calculate_cluster_score(data, k_sizes, algos, metrics)
@@ -185,9 +186,12 @@ for key, data in dist_dict.items():
 #%%
 #HIER DE STATS PER CLUSTER EVEN BEKIJKEN, CELL HIERBOVEN IS NODIG!!
 from stats import Stats
+import pickle
 
 ori_df = Data('tosca_and_general', 'all').df
-ori_df['cluster'] = results['braycurtis']
+distance = 'braycurtis'
+ori_df['cluster'] = results[distance]
+pickle.dump(ori_df, open('../temp_data/dfpluscluster_{}'.format(distance), 'wb'))
 
 def get_stats(datasets):
     mean_df = pd.DataFrame()
@@ -211,7 +215,30 @@ clu2 = ori_df[ori_df['cluster'] == 2]
 clu3 = ori_df[ori_df['cluster'] == 3]
 
 datasets = [Stats(clu0), Stats(clu1), Stats(clu2), Stats(clu3)]
-results = get_stats(datasets)
+stat_results = get_stats(datasets)
+vis = Vis(ori_df, 'gm2braycurtis')
+
+#%%#########################################################################
+##                           feature importance                           ##
+############################################################################
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+
+def feature_extraction(df, predictor):
+    copy_df = df.copy()
+    y = copy_df['cluster']
+    X = copy_df.drop(columns=['cluster'])
+    X_train, X_test, y_train, y_test = train_test_split(X, y)
+
+    predictor.fit(X=X_train, y=y_train)
+    score = predictor.score(X_test, y_test)
+    imps = predictor.feature_importances_
+    feature_importances = sorted(zip(X_test, imps), reverse=True, key=lambda x: x[1])
+    feature_importances.append(('pred_score', score))        
+    return feature_importances
+
+feature_extraction(ori_df, RandomForestClassifier())
+
 
 #%%#########################################################################
 ##                 PCA analysis and cluster visualisation                 ##
@@ -293,7 +320,7 @@ def compare_indexes_repo():
     puc_data = Data('tosca_and_general', 'puccini').df
     forg_data = Data('tosca_and_general', 'forge').df
     all_data = a4c_data.append(puc_data)
-    all_data = all_data.append(forg_data)
+    all_data = all_data.append(forg_data) 
 
     df = all_data.copy()
     scaled = scale_df(df)
