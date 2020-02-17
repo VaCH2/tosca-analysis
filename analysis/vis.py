@@ -2,6 +2,7 @@ import pickle
 import seaborn as sns
 import matplotlib.pyplot as plt
 import pandas as pd
+import numpy as np
 
 
 class Vis():
@@ -24,6 +25,8 @@ class Vis():
             if col != 'cluster':
                 sns.boxplot(x="cluster", y=col, data=df, showfliers=False, ax=ax)
                 ax.title.set_text(col)
+                #ax.set_yscale('log')
+                #ax.set(ylim=(0.00, 1))
                 y_axis = ax.axes.get_yaxis()
                 y_label = y_axis.get_label()
                 y_label.set_visible(False)
@@ -34,6 +37,6 @@ class Vis():
         plt.show()
 
 
-df = pickle.load(open('../temp_data/dfpluscluster_braycurtis', 'rb'))
-Vis(df)
+# df = pickle.load(open('../temp_data/dfpluscluster_braycurtis', 'rb'))
+# Vis(df)
 
