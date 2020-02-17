@@ -149,9 +149,9 @@ metrics = {'silhouette' : silhouette_score, \
 
 data = Data('tosca_and_general', 'all')
 dist_dict = {#'spearman' : Preprocessing(data, customdistance='spearman'),
-    'braycurtis' : Preprocessing(data, customdistance='braycurtis'),
-    'cosine' : Preprocessing(data, customdistance='cosine'),
-    'l1' : Preprocessing(data, customdistance='l1')}
+    'braycurtis' : Preprocessing(data, anomalies=3, customdistance='braycurtis'),
+    'cosine' : Preprocessing(data, anomalies=3, customdistance='cosine'),
+    'l1' : Preprocessing(data, anomalies=3, customdistance='l1')}
 
 #%% 
 results = {}
@@ -168,7 +168,7 @@ for key, data in dist_dict.items():
     # data = pairwise_distances(data, metric='cosine')
 
     try:
-        resu = clustering(data.df.to_numpy(), 'gm', 4)
+        resu = clustering(data.df.to_numpy(), 'agglo', 3)
         #resu = clustering(data, 'agglo', 4)
         unique, counts = np.unique(resu, return_counts=True)
         results[key] = resu #dict(zip(unique, counts))
@@ -188,8 +188,14 @@ for key, data in dist_dict.items():
 from stats import Stats
 import pickle
 
+
 ori_df = Data('tosca_and_general', 'all').df
 distance = 'braycurtis'
+
+#Deze gebruiken wanneer anomalies zijn gedelete
+ix = [i for i in ori_df.index if i in dist_dict[distance].df.index]
+ori_df = ori_df.loc[ix, :]
+
 ori_df['cluster'] = results[distance]
 pickle.dump(ori_df, open('../temp_data/dfpluscluster_{}'.format(distance), 'wb'))
 
@@ -214,9 +220,20 @@ clu1 = ori_df[ori_df['cluster'] == 1]
 clu2 = ori_df[ori_df['cluster'] == 2]
 clu3 = ori_df[ori_df['cluster'] == 3]
 
-datasets = [Stats(clu0), Stats(clu1), Stats(clu2), Stats(clu3)]
+datasets = [Stats(clu0), Stats(clu1), Stats(clu2)]#, Stats(clu3)]
 stat_results = get_stats(datasets)
-vis = Vis(ori_df, 'gm2braycurtis')
+vis = Vis(ori_df, 'agglo3cosline')
+
+
+#%% Stat test om te kijken of er een statistisch verschil is tussen de clusters voor 
+#specifieke features waar gaan boxplot voor te maken is
+from significance import Significance
+
+sig = Significance(clu1, clu2)
+print(sig.uncorrected_p_values)
+sig.sig
+
+
 
 #%%#########################################################################
 ##                           feature importance                           ##
