@@ -1,6 +1,7 @@
 from utils import scale_df
 from data import Data
 import numpy as np
+import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 
 from pyod.models.cblof import CBLOF 
@@ -23,7 +24,7 @@ class AnomalyDetector():
             self.df = data.df
         elif isinstance(data, pd.DataFrame):
             self.df = data
-            
+
         self.df['outlier_score'] = self.__train_classifiers()
         self.outliers = self.__identify_outliers(cutoff)
 
