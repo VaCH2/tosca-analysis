@@ -71,7 +71,7 @@ class Preprocessing():
 
 
     def filter_anomalies(self, df, cutoff):
-        ix = AnomalyDetector(cutoff).outliers
+        ix = AnomalyDetector(df, cutoff).outliers
         print('Number of anomalies: ', len(ix))
 
         to_drop = [i for i in ix.index if i in df.index]
