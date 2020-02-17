@@ -19,7 +19,11 @@ import matplotlib.pyplot as plt
 class AnomalyDetector():
 
     def __init__(self, data, cutoff=3):
-        self.df = data.df
+        if isinstance(data, Data):
+            self.df = data.df
+        elif isinstance(data, pd.DataFrame):
+            self.df = data
+            
         self.df['outlier_score'] = self.__train_classifiers()
         self.outliers = self.__identify_outliers(cutoff)
 
