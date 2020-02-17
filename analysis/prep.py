@@ -6,18 +6,19 @@ import pickle
 from scipy.stats import chi2_contingency as chi2
 from sklearn.metrics import pairwise_distances
 from scipy.stats import spearmanr
+from anomaly import AnomalyDetector
 
 class Preprocessing():
-    def __init__(self, data, constants=None, corr=None, pca=False, anomalies=False, customdistance=None):
-        '''For constants and corr please provide the list of to be dropped columns.
-        For custom distance provide valid distance (spearman, braycurtis, cosine, l1)'''
+    def __init__(self, data, constants=None, corr=None, pca=False, anomalies=None, customdistance=None):
+        '''For constants and corr please provide the list of to be dropped columns. \
+        For anomalies provide the cutoff point. For custom distance provide valid distance \
+            (spearman, braycurtis, cosine, l1)'''
 
         if isinstance(data, Data):
             self.df = data.df
         elif isinstance(data, pd.DataFrame):
             self.df = data
 
-        self.anomalypercentage = None
         to_drop = []
         if corr != None:
             to_drop.extend(corr)
@@ -30,15 +31,15 @@ class Preprocessing():
         self.df = self.df.drop(to_drop, axis=1)
         
         if anomalies != None:
-            self.anomalypercentage = self.filter_anomalies()
+            self.df = self.filter_anomalies(self.df, anomalies)
 
         if customdistance in ['spearman', 'braycurtis', 'cosine', 'l1']:
             try:
-                self.df = pickle.load(open('../temp_data/tosca_and_general_all_{}'.format(customdistance), 'rb'))
+                self.df = pickle.load(open('../temp_data/tosca_and_general_all_{}_anomalies_{}'.format(customdistance, anomalies), 'rb'))
                 
             except (OSError, IOError) as e:
                 self.df = self.__transform_distance(customdistance)
-                pickle.dump(self.df, open('../temp_data/tosca_and_general_all_{}'.format(customdistance), 'wb'))
+                pickle.dump(self.df, open('../temp_data/tosca_and_general_all_{}_anomalies_{}'.format(customdistance, anomalies), 'wb'))
         else:
             print('Invalid distance function! Valid funtions are: spearman, braycurtis, cosine, l1')
 
@@ -69,6 +70,23 @@ class Preprocessing():
 
 
 
-    def filter_anomalies(self):
-        return 0
+    def filter_anomalies(self, df, cutoff):
+        ix = AnomalyDetector(cutoff).outliers
+        print('Number of anomalies: ', len(ix))
 
+        to_drop = [i for i in ix.index if i in df.index]
+        df = df.drop(to_drop)
+
+        print('After dropping {} datapoints, there are {} datapoints left'.format(len(to_drop), df.shape[0]))
+        
+        # filtered_datasets = []
+        # for dataset in datasets:
+            
+        #     print('originele grootte df: ', dataset.df.shape[0])
+        #     print('aantal anomalies: ', len(to_drop))
+        #     new_df = dataset.df.drop(to_drop)
+        #     print('nieuwe lengte: ', new_df.shape[0])
+
+        #     filtered_datasets.append(Stats(new_df))
+
+        return df
