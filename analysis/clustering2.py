@@ -4,13 +4,14 @@ import pandas as pd
 import numpy as np
 import random
 from vis import Vis
-
+from stats import Stats
 
 from sklearn.metrics import silhouette_score
 from sklearn.metrics import davies_bouldin_score
 from sklearn.metrics import calinski_harabasz_score
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.mixture import GaussianMixture
+from sklearn.cluster import DBSCAN
 
 
 def kMedoids(D, k, tmax=100):
@@ -97,31 +98,37 @@ def clustering(array, algo, k):
     if algo == 'kmedoids':
         label_dict = {i : [] for i in range(len(array))}
         i=0
-        while i < 200:
+        while i < 2:
             m, labels = kMedoids(array, k)
 
             for key, value in label_dict.items():
                 value.append(labels[key])
             i += 1
+        
+        #print('Iterations: ', i)
    
         labels = [None] * len(array)
         for key, value in label_dict.items():
             value = np.array(value)
             counts = np.bincount(value)
             labels[key] = np.argmax(counts)
-        print('Iterations: ', i)
+        
 
         return np.array(labels)
 
-    elif algo == 'agglo':
+    if algo == 'agglo':
         model = AgglomerativeClustering(n_clusters=k, affinity='precomputed', linkage='average')
         return model.fit_predict(array)
-    elif algo == 'gm':
+    if algo == 'dbscan':
+        model = DBSCAN(metric='precomputed')
+        return model.fit_predict(array)
+    if algo == 'gm':
         model = GaussianMixture(n_components=k)
         return model.fit_predict(array)
 
     else:
-        print('Invalid algo, only "kmedoids", "agglo" and "gm"')
+        print('Invalid algo, only "kmedoids", "dbscan", "agglo" and "gm"')
+
 
 def calculate_cluster_score(df, k_sizes, algos, metrics):
     index = pd.MultiIndex.from_product(iterables=[algos.keys(), metrics.keys()], names=['algo', 'evaluation'])
@@ -129,10 +136,14 @@ def calculate_cluster_score(df, k_sizes, algos, metrics):
 
     for k in k_sizes:
         for algo_name, algo in algos.items():
-            result = clustering(df, algo, k)
-            for metric_name, metric in metrics.items():
-                score = metric(df, result)
-                scores.loc[(algo_name, metric_name), k] = score
+            try:
+                result = clustering(df, algo, k)
+                for metric_name, metric in metrics.items():
+                    score = metric(df, result)
+                    scores.loc[(algo_name, metric_name), k] = score
+            except:
+                pass
+
     return scores
 
 
@@ -140,7 +151,8 @@ k_sizes = [2,3,4,5,6,7,8]
 
 algos = {'kmedoids' : 'kmedoids', \
     'agglo' : 'agglo', \
-    'gm' : 'gm'}
+    'gm' : 'gm', \
+    'dbscan' : 'dbscan'}
 
 
 metrics = {'silhouette' : silhouette_score, \
@@ -148,14 +160,30 @@ metrics = {'silhouette' : silhouette_score, \
     'calinski' : calinski_harabasz_score}
 
 data = Data('tosca_and_general', 'all')
-dist_dict = {#'spearman' : Preprocessing(data, customdistance='spearman'),
-    'braycurtis' : Preprocessing(data, anomalies=3, customdistance='braycurtis'),
-    'cosine' : Preprocessing(data, anomalies=3, customdistance='cosine'),
-    'l1' : Preprocessing(data, anomalies=3, customdistance='l1')}
+# dist_dict = {#'spearman' : Preprocessing(data, customdistance='spearman'),
+#     'braycurtis' : Preprocessing(data, anomalies=3, customdistance='braycurtis'),
+#     'cosine' : Preprocessing(data, anomalies=3, customdistance='cosine'),
+#     'l1' : Preprocessing(data, anomalies=3, customdistance='l1')}
+
+# dist_dict = {'braycurtis' : Preprocessing(data,  customdistance='braycurtis'),
+#     'cosine' : Preprocessing(data, customdistance='cosine'),
+#     'l1' : Preprocessing(data, customdistance='l1')}
+
+corr_cols = Stats(data).correlation()
+
+dist_dict = {'braycurtis' : Preprocessing(data, anomalies=3, corr=corr_cols, customdistance='braycurtis'),
+    'cosine' : Preprocessing(data, anomalies=3, corr=corr_cols, customdistance='cosine'),
+    'l1' : Preprocessing(data, anomalies=3, corr=corr_cols, customdistance='l1')}
+
 
 #%% 
 results = {}
 evals = {}
+
+distance = 'l1'
+td_algo = 'gm'
+n_clusters = 2
+
 
 # #TIJDELIJK
 # data = Data('tosca_and_general', 'all')
@@ -168,7 +196,7 @@ for key, data in dist_dict.items():
     # data = pairwise_distances(data, metric='cosine')
 
     try:
-        resu = clustering(data.df.to_numpy(), 'agglo', 3)
+        resu = clustering(data.df.to_numpy(), td_algo, n_clusters)
         #resu = clustering(data, 'agglo', 4)
         unique, counts = np.unique(resu, return_counts=True)
         results[key] = resu #dict(zip(unique, counts))
@@ -176,6 +204,7 @@ for key, data in dist_dict.items():
         results[key] = 'all in one cluster so error'
         
     print(key, ':', np.unique(results[key], return_counts=True)    )
+
     # try:
     #     eva = calculate_cluster_score(data.df.to_numpy(), k_sizes, algos, metrics)
     #     #eva = calculate_cluster_score(data, k_sizes, algos, metrics)
@@ -184,20 +213,28 @@ for key, data in dist_dict.items():
     #     evals[key] = 'all in one cluster so error'
 
 #%%
-#HIER DE STATS PER CLUSTER EVEN BEKIJKEN, CELL HIERBOVEN IS NODIG!!
-from stats import Stats
+
 import pickle
 
 
 ori_df = Data('tosca_and_general', 'all').df
-distance = 'braycurtis'
+
+#Deze alleen als correlerende features eruit moeten
+corr_cols = Stats(ori_df).correlation()
+ori_df = ori_df.drop(corr_cols, axis=1)
+
 
 #Deze gebruiken wanneer anomalies zijn gedelete
 ix = [i for i in ori_df.index if i in dist_dict[distance].df.index]
 ori_df = ori_df.loc[ix, :]
 
 ori_df['cluster'] = results[distance]
-pickle.dump(ori_df, open('../temp_data/dfpluscluster_{}'.format(distance), 'wb'))
+#pickle.dump(ori_df, open('../temp_data/dfpluscluster_{}'.format(distance), 'wb'))
+
+#%%
+#HIER DE STATS PER CLUSTER EVEN BEKIJKEN, CELL HIERBOVEN IS NODIG!!
+from stats import Stats
+from vis import Vis
 
 def get_stats(datasets):
     mean_df = pd.DataFrame()
@@ -220,16 +257,16 @@ clu1 = ori_df[ori_df['cluster'] == 1]
 clu2 = ori_df[ori_df['cluster'] == 2]
 clu3 = ori_df[ori_df['cluster'] == 3]
 
-datasets = [Stats(clu0), Stats(clu1), Stats(clu2)]#, Stats(clu3)]
+datasets = [Stats(clu0), Stats(clu1)]#, Stats(clu2)]#, Stats(clu3)]
 stat_results = get_stats(datasets)
-vis = Vis(ori_df, 'agglo3cosline')
+#vis = Vis(ori_df, 'agglo3cosline')
 
 
 #%% Stat test om te kijken of er een statistisch verschil is tussen de clusters voor 
 #specifieke features waar gaan boxplot voor te maken is
 from significance import Significance
 
-sig = Significance(clu1, clu2)
+sig = Significance(clu0, clu1)
 print(sig.uncorrected_p_values)
 sig.sig
 
@@ -254,8 +291,10 @@ def feature_extraction(df, predictor):
     feature_importances.append(('pred_score', score))        
     return feature_importances
 
-feature_extraction(ori_df, RandomForestClassifier())
-
+fi = feature_extraction(ori_df, RandomForestClassifier())
+fi_df = ori_df[[i[0] for i in fi[:10]]]
+fi_df['cluster'] = ori_df['cluster']
+Vis(fi_df, 'BraycurtisAgglo4')
 
 #%%#########################################################################
 ##                 PCA analysis and cluster visualisation                 ##
@@ -311,10 +350,29 @@ for cluster, color in zip(clusters,colors):
 ax.legend(clusters)
 ax.grid()
 
+#%%#########################################################################
+##                                  t-SNE                                 ##
+############################################################################
+from sklearn.manifold import TSNE
+from utils import scale_df
+from matplotlib import pyplot as plt
+import seaborn as sns
 
 
+sns.set(rc={'figure.figsize':(11.7,8.27)})
+palette = sns.color_palette("bright", 3)
 
+df = ori_df
+df = df.drop('cluster', axis=1)
 
+X_scaled = scale_df(df)
+#Na een beetje spelen lijkt 20, 300 en 5000 nog het meeste op een split. 
+tsne = TSNE(perplexity=20, learning_rate=300, n_iter=5000)
+X_embedded = tsne.fit_transform(X_scaled)
+
+plt = sns.scatterplot(X_embedded[:,0], X_embedded[:,1], hue=ori_df['cluster'], legend='full', palette=palette)
+to_save = plt.get_figure()
+to_save.savefig('../temp_data/tsne_{}_{}.png'.format(distance, td_algo), dpi=300, bbox_inches='tight')
 
 #%%
 
