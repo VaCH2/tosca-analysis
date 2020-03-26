@@ -165,24 +165,24 @@ data = Data('tosca_and_general', 'all')
 #     'cosine' : Preprocessing(data, anomalies=3, customdistance='cosine'),
 #     'l1' : Preprocessing(data, anomalies=3, customdistance='l1')}
 
-# dist_dict = {'braycurtis' : Preprocessing(data,  customdistance='braycurtis'),
-#     'cosine' : Preprocessing(data, customdistance='cosine'),
-#     'l1' : Preprocessing(data, customdistance='l1')}
+dist_dict = {'braycurtis' : Preprocessing(data,  customdistance='braycurtis'),
+    'cosine' : Preprocessing(data, customdistance='cosine'),
+    'l1' : Preprocessing(data, customdistance='l1')}
 
-corr_cols = Stats(data).correlation()
+# corr_cols = Stats(data).correlation()
 
-dist_dict = {'braycurtis' : Preprocessing(data, anomalies=3, corr=corr_cols, customdistance='braycurtis'),
-    'cosine' : Preprocessing(data, anomalies=3, corr=corr_cols, customdistance='cosine'),
-    'l1' : Preprocessing(data, anomalies=3, corr=corr_cols, customdistance='l1')}
+# dist_dict = {'braycurtis' : Preprocessing(data, anomalies=3, corr=corr_cols, customdistance='braycurtis'),
+#     'cosine' : Preprocessing(data, anomalies=3, corr=corr_cols, customdistance='cosine'),
+#     'l1' : Preprocessing(data, anomalies=3, corr=corr_cols, customdistance='l1')}
 
 
 #%% 
 results = {}
 evals = {}
 
-distance = 'l1'
-td_algo = 'gm'
-n_clusters = 2
+distance = 'cosine'
+td_algo = 'agglo'
+n_clusters = 3
 
 
 # #TIJDELIJK
@@ -294,7 +294,7 @@ def feature_extraction(df, predictor):
 fi = feature_extraction(ori_df, RandomForestClassifier())
 fi_df = ori_df[[i[0] for i in fi[:10]]]
 fi_df['cluster'] = ori_df['cluster']
-Vis(fi_df, 'BraycurtisAgglo4')
+Vis(fi_df, 'Braycurtisgm6')
 
 #%%#########################################################################
 ##                 PCA analysis and cluster visualisation                 ##
@@ -339,8 +339,8 @@ ax = fig.add_subplot(1,1,1)
 ax.set_xlabel('Principal Component 1', fontsize = 15)
 ax.set_ylabel('Principal Component 2', fontsize = 15)
 
-clusters = [0, 1, 2, 3, 4]
-colors = ['r', 'g', 'b', 'y', 'c']
+clusters = [0, 1, 2]#, 3, 4]
+colors = ['r', 'g', 'b']#, 'y', 'c']
 for cluster, color in zip(clusters,colors):
     indicesToKeep = finalDf['cluster'] == cluster
     ax.scatter(finalDf.loc[indicesToKeep, 0]
