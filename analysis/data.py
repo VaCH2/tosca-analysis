@@ -11,7 +11,7 @@ class Data():
             raw_df = pickle.load(open('../temp_data/all_raw_df', 'rb'))
             
         except (OSError, IOError) as e:
-            files = self.get_indices('all')
+            files = self.get_indices('all', None)
             json_data = self.json_data(metrics_type, files.get('all'))
             raw_df = self.to_df(json_data)
             pickle.dump(raw_df, open('../temp_data/all_raw_df', 'wb'))
@@ -23,8 +23,10 @@ class Data():
 
         cleaned_size = df.shape[0]
         self.droppedrows = raw_size - cleaned_size
+        self.raw_df = raw_df
 
         split_indices = self.get_indices(split, df)
+
 
         self.dfs = {split_element : df.loc[indices] for split_element, indices in split_indices.items()}
         
@@ -65,12 +67,6 @@ class Data():
                 split_files[split] = files
         
         return split_files
-
-
-
-
-
-
 
 
 
@@ -161,13 +157,10 @@ class Data():
     def cleaning(self, df):       
         #Drop NaN rows and error columns, and make numeric
         df = df.drop(labels=(df.filter(regex='msg').columns), axis=1)
-        start = df.shape[0]
         df = df.dropna()
         cols = df.select_dtypes(include=['bool', 'object']).columns
         df[cols] = df[cols].astype(int)
         df = df.dropna()
-        self.nan_dropped = start - df.shape[0]
-        print('Rows with NaN dropped: ', nan_dropped)
         return df
 
     
@@ -194,4 +187,4 @@ class Data():
         return split_paths
     
 
-data = Data('purpose')
+data = Data('all')
