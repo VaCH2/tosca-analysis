@@ -16,17 +16,16 @@ class Data():
             raw_df = self.to_df(json_data)
             pickle.dump(raw_df, open('../temp_data/all_raw_df', 'wb'))
 
-        raw_size = raw_df.shape[0]
+        self.raw_df = raw_df
+        raw_size = self.raw_df.shape[0]
 
-        df = self.cleaning(raw_df)
+        df = self.cleaning(self.raw_df)
         #df = self.valid_tosca_file(df)
 
         cleaned_size = df.shape[0]
         self.droppedrows = raw_size - cleaned_size
-        self.raw_df = raw_df
-
+        
         split_indices = self.get_indices(split, df)
-
 
         self.dfs = {split_element : df.loc[indices] for split_element, indices in split_indices.items()}
         
@@ -64,6 +63,8 @@ class Data():
                 for path in paths:
                     files.extend(self.get_yaml_files(path))
                 
+                #make sure dropped files are not included
+                files = [file for file in files if file in list(df.index)]
                 split_files[split] = files
         
         return split_files
@@ -182,9 +183,21 @@ class Data():
         split_paths['topology'] = df[(df['ttb_check'] == 1) & (df['custom_def'] == False)].index
         split_paths['custom'] = df[(df['ttb_check'] == 0) & (df['custom_def'] == True)].index
         split_paths['both'] = df[(df['ttb_check'] == 1) & (df['custom_def'] == True)].index
-        split_paths['none'] = df[(df['ttb_check'] == 0) & (df['custom_def'] == False)].index
+
+        assigned_indices = list(split_paths['topology']) + list(split_paths['custom']) + list(split_paths['both'])
+        print(len(assigned_indices))
+        not_assigned_indices = [ix for ix in list(df.index) if ix not in assigned_indices]
+        print(len(not_assigned_indices))
+        split_paths['none'] = df.loc[not_assigned_indices].index
+        print(df.shape[0])
+
+
+        #split_paths['none'] = df[(df['ttb_check'] == 0) & (df['custom_def'] == False)].index
         
         return split_paths
     
+goal = 'all'
 
-data = Data('all')
+data = Data(goal)
+
+
