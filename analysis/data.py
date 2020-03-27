@@ -150,7 +150,6 @@ class Data():
         #hier alles eruit flikkeren wat vreemd is
         #tosca_definition
         #Similarity checken (weet nog niet hoe, want heb alleen de metrics)
-
         pass
 
 
@@ -185,19 +184,14 @@ class Data():
         split_paths['both'] = df[(df['ttb_check'] == 1) & (df['custom_def'] == True)].index
 
         assigned_indices = list(split_paths['topology']) + list(split_paths['custom']) + list(split_paths['both'])
-        print(len(assigned_indices))
         not_assigned_indices = [ix for ix in list(df.index) if ix not in assigned_indices]
-        print(len(not_assigned_indices))
         split_paths['none'] = df.loc[not_assigned_indices].index
-        print(df.shape[0])
 
 
-        #split_paths['none'] = df[(df['ttb_check'] == 0) & (df['custom_def'] == False)].index
-        
         return split_paths
-    
-goal = 'all'
 
+
+goal = 'professionality'
 data = Data(goal)
 
 
