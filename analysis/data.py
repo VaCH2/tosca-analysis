@@ -2,6 +2,8 @@ import os
 import pandas as pd
 from toscametrics import calculator
 import pickle
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
 class Data():
     #desnoods die metrics type hierin code ipv in die calculator en dan gewoon die hardcoden op 'all'
@@ -10,23 +12,30 @@ class Data():
         try:
             raw_df = pickle.load(open('../temp_data/all_raw_df', 'rb'))
             
-        except (OSError, IOError) as e:
+        except (OSError, IOError):
             files = self.get_indices('all', None)
             json_data = self.json_data(metrics_type, files.get('all'))
             raw_df = self.to_df(json_data)
             pickle.dump(raw_df, open('../temp_data/all_raw_df', 'wb'))
 
+
         self.raw_df = raw_df
         raw_size = self.raw_df.shape[0]
 
-        df = self.cleaning(self.raw_df)
-        #df = self.valid_tosca_file(df)
+
+        try:
+            df = pickle.load(open('../temp_data/all_df', 'rb'))
+
+        except (OSError, IOError):
+            df = self.cleaning(self.raw_df)
+            pickle.dump(df, open('../temp_data/all_df', 'wb'))
+
 
         cleaned_size = df.shape[0]
         self.droppedrows = raw_size - cleaned_size
         
-        split_indices = self.get_indices(split, df)
 
+        split_indices = self.get_indices(split, df)
         self.dfs = {split_element : df.loc[indices] for split_element, indices in split_indices.items()}
         
 
@@ -129,9 +138,51 @@ class Data():
         
         return allFiles
 
+
+
+    def calculate_vectors(self, instanceblock): 
+        vectorizer = CountVectorizer(token_pattern='[^\s]+').fit(instanceblock)
+        vectorizer = vectorizer.transform(instanceblock)
+        vectors =vectorizer.toarray()
+        return vectors
+
+
+
+    def calculate_cosine(self, vec1, vec2):
+        vec1 = vec1.reshape(1, -1)
+        vec2 = vec2.reshape(1, -1)
+        return cosine_similarity(vec1, vec2)[0][0]   
+
+
+
+    def check_similarity(self, file_list):
+        string_list = []
+        for filePath in file_list:
+            with open(filePath, 'r') as file:
+                yml = file.read()
+            string_list.append(yml)
+        
+        vectors = self.calculate_vectors(string_list)
+
+
+        sims = []
+        #todo: identifier for the similarities.
+
+        for i in list(enumerate(vectors)):
+            next_index = i[0] + 1
+
+            for j in list(enumerate(vectors))[next_index:]:
+                sims.append((i[0], j[0], self.calculate_cosine(i[1], j[1])))
+        
+        return sims         
+
+
+
     def json_data(self, metrics_type, yaml_files):
         metrics = calculator.MetricCalculator(yaml_files, metrics_type).getresults
         return metrics
+
+
 
     def to_df(self, json_data):
         #Transform JSON file to Pandas DataFrame
@@ -145,16 +196,12 @@ class Data():
         return df
 
 
+    def cleaning(self, df):
+        #Check similarity
+        self.similarity = self.check_similarity(list(df.index))
+        #temporary storage
+        pickle.dump(self.similarity, open('../temp_data/similarity_scores', 'wb'))
 
-    def valid_tosca_file(self, df):
-        #hier alles eruit flikkeren wat vreemd is
-        #tosca_definition
-        #Similarity checken (weet nog niet hoe, want heb alleen de metrics)
-        pass
-
-
-
-    def cleaning(self, df):       
         #Drop NaN rows and error columns, and make numeric
         df = df.drop(labels=(df.filter(regex='msg').columns), axis=1)
         df = df.dropna()
@@ -191,7 +238,19 @@ class Data():
         return split_paths
 
 
-goal = 'professionality'
+goal = 'all'
 data = Data(goal)
 
+#test = list(data.dfs['Example'].index)[:4]
 
+#%%
+import collections
+
+sim  = [pair for pair in data.similarity if pair[2] == 1.0]
+pos_1 = [pair[0] for pair in sim]
+pos_2 = [pair[1] for pair in sim]
+all_ix = pos_1 + pos_2
+
+counter=collections.Counter(all_ix).most_common()
+
+# %%
