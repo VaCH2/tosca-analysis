@@ -4,6 +4,7 @@ from toscametrics import calculator
 import pickle
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+from utils import df_minus_df
 
 class Data():
     #desnoods die metrics type hierin code ipv in die calculator en dan gewoon die hardcoden op 'all'
@@ -42,6 +43,7 @@ class Data():
     def get_indices(self, split, df):
         data_path = r'C:\Users\s145559\OneDrive - TU Eindhoven\School\JADS\Jaar 2\Thesis\RADON PROJECT\Data\Repositories'
         repos = os.listdir(data_path)
+        
         professionalities = ['Example', 'Industry']
 
         if split == 'repo':
@@ -131,7 +133,7 @@ class Data():
             fullPath = os.path.join(path, entry)
             if os.path.isdir(fullPath):
                 allFiles = allFiles + self.get_yaml_files(fullPath)
-            else: 
+            else:
                 for extension in extensions:
                     if fullPath.endswith(extension):
                         allFiles.append(fullPath)       
@@ -198,9 +200,31 @@ class Data():
 
     def cleaning(self, df):
         #Check similarity
-        self.similarity = self.check_similarity(list(df.index))
-        #temporary storage
-        pickle.dump(self.similarity, open('../temp_data/similarity_scores', 'wb'))
+        similarity_scores = self.check_similarity(list(df.index))
+        similar_files = [pair for pair in similarity_scores if pair[2] == 1]
+
+        #Because in order so multiple duplicates will be deleted eventually
+        #here range because we have a numerical index, in the next one we have the actual index
+        to_exclude = [pair[1] for pair in similar_files]
+        ixs_to_keep = [ix for ix in range(df.shape[0]) if ix not in to_exclude]
+
+        df = df.iloc[ixs_to_keep]
+
+        #Check valid tosca
+        tosca_metrics = ['na_count', 'nc_count', 'nc_min', 'nc_max', 'nc_median', 'nc_mean', 'ni_count',
+       'nif_count', 'ninp_count', 'ninpc_count', 'nn_count', 'nnt_count', 'nout_count', 'np_count', 
+       'np_min', 'np_max', 'np_median', 'np_mean', 'nr_count', 'nrt_count', 'ttb_check', 'cdnt_count', 
+       'cdrt_count', 'cdat_count', 'cdct_count', 'cddt_count', 'cdgt_count', 'cdit_count', 'cdpt_count', 
+       'nw_count', 'tdb_check', 'nrq_count', 'nsh_count', 'ncys_count', 'tob_check', 'ngc_count', 
+       'ngp_count', 'ngro_count', 'npol_count', 'nf_count']
+
+        check_tosca_df = df[tosca_metrics]
+        check_tosca_df['valid_file'] = check_tosca_df.any(1)
+        to_exclude = list(check_tosca_df[check_tosca_df['valid_file'] == False].index)
+        ixs_to_keep = [ix for ix in list(df.index) if ix not in to_exclude]
+        
+        df = df.loc[ixs_to_keep]
+
 
         #Drop NaN rows and error columns, and make numeric
         df = df.drop(labels=(df.filter(regex='msg').columns), axis=1)
@@ -241,16 +265,49 @@ class Data():
 goal = 'all'
 data = Data(goal)
 
-#test = list(data.dfs['Example'].index)[:4]
 
-#%%
-import collections
+# # %%
+# def cleaning_test(df):
+#         print('Start size: ', df.shape)
+#         #Check similarity
+#         similarity_scores = pickle.load(open('../temp_data/similarity_scores', 'rb'))
+#         similar_files = [pair for pair in similarity_scores if pair[2] == 1]
 
-sim  = [pair for pair in data.similarity if pair[2] == 1.0]
-pos_1 = [pair[0] for pair in sim]
-pos_2 = [pair[1] for pair in sim]
-all_ix = pos_1 + pos_2
+#         #Because in order so multiple duplicates will be deleted eventually
+#         #here range because we have a numerical index, in the next one we have the actual index
+#         to_exclude = {pair[1] for pair in similar_files}
+#         print('SIms to delete: ', len(to_exclude))
+#         ixs_to_keep = [ix for ix in range(df.shape[0]) if ix not in to_exclude]
+#         df = df.iloc[ixs_to_keep]
 
-counter=collections.Counter(all_ix).most_common()
+#         print('After sim deletion: ', df.shape)
 
-# %%
+#         #Check valid tosca
+#         tosca_metrics = ['na_count', 'nc_count', 'nc_min', 'nc_max', 'nc_median', 'nc_mean', 'ni_count',
+#        'nif_count', 'ninp_count', 'ninpc_count', 'nn_count', 'nnt_count', 'nout_count', 'np_count', 
+#        'np_min', 'np_max', 'np_median', 'np_mean', 'nr_count', 'nrt_count', 'ttb_check', 'cdnt_count', 
+#        'cdrt_count', 'cdat_count', 'cdct_count', 'cddt_count', 'cdgt_count', 'cdit_count', 'cdpt_count', 
+#        'nw_count', 'tdb_check', 'nrq_count', 'nsh_count', 'ncys_count', 'tob_check', 'ngc_count', 
+#        'ngp_count', 'ngro_count', 'npol_count', 'nf_count']
+
+#         check_tosca_df = df[tosca_metrics]
+#         check_tosca_df['valid_file'] = check_tosca_df.any(1)
+#         to_exclude = list(check_tosca_df[check_tosca_df['valid_file'] == False].index)
+#         print('Invalids to delete: ', len(to_exclude))
+#         ixs_to_keep = [ix for ix in list(df.index) if ix not in to_exclude]
+        
+#         df = df.loc[ixs_to_keep]
+#         print('After invalides deletion: ', df.shape)
+
+
+#         #Drop NaN rows and error columns, and make numeric
+#         df = df.drop(labels=(df.filter(regex='msg').columns), axis=1)
+#         df = df.dropna()
+#         cols = df.select_dtypes(include=['bool', 'object']).columns
+#         df[cols] = df[cols].astype(int)
+#         df = df.dropna()
+#         print('After rest shit deletion: ', df.shape)
+#         return df
+
+# test_data = Data('all').raw_df
+# x = cleaning_test(test_data)
