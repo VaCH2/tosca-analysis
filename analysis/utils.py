@@ -1,4 +1,5 @@
 from sklearn.preprocessing import StandardScaler
+import copy
 
 
 def scale_df(df):
@@ -29,3 +30,10 @@ def allin3(nested_list):
                 if element in nested_list[2]:
                     all.add(element)
     return list(all)
+
+def df_minus_df(df1, df2):
+    df = copy.deepcopy(df1)
+    ixs = [ix for ix in list(df.index) if ix not in list(df2.index)]
+    df = df.loc[ixs]
+
+    return df
