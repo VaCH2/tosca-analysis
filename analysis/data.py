@@ -263,8 +263,3 @@ class Data():
 
 
         return split_paths
-
-
-repo_data = Data('repo')
-prof_data = Data('professionality')
-purp_data = Data('purpose')

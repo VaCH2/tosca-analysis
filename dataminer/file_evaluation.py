@@ -3,6 +3,7 @@ import shutil
 from utils import all_filepaths
 from utils import get_valid_files
 from utils import remove_invalid_files
+from utils import safe_copy
 import yaml
 
 root_folder = os.path.dirname(os.path.abspath(__file__))
@@ -54,10 +55,10 @@ for repo in owner_and_repo:
 
 
         if sum([file.count(indicator) for indicator in example_indicators]) != 0:
-            shutil.copy(file_path, example_dir)
+            safe_copy(file_path, example_dir)
 
         else:
-            shutil.copy(file_path, industry_dir)
+            safe_copy(file_path, industry_dir)
 
     remove_invalid_files(path)
         
