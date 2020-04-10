@@ -4,20 +4,24 @@ from toscametrics import calculator
 import pickle
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-from utils import df_minus_df
+
+root_folder = os.path.dirname(os.path.dirname( __file__ ))
+temp_data_folder = os.path.join(root_folder, 'temp_data')
 
 class Data():
     #desnoods die metrics type hierin code ipv in die calculator en dan gewoon die hardcoden op 'all'
     def __init__(self, split='all', metrics_type='tosca_and_general'):
+        '''A dictionary were the keys are the possible alternatives in the provided split.
+        The value is the corresponding, filtered dataframe.'''
 
         try:
-            raw_df = pickle.load(open('../temp_data/all_raw_df', 'rb'))
+            raw_df = pickle.load(open(os.path.join(temp_data_folder, 'all_raw_df'), 'rb'))
             
         except (OSError, IOError):
             files = self.get_indices('all', None)
             json_data = self.json_data(metrics_type, files.get('all'))
             raw_df = self.to_df(json_data)
-            pickle.dump(raw_df, open('../temp_data/all_raw_df', 'wb'))
+            pickle.dump(raw_df, open(os.path.join(temp_data_folder, 'all_raw_df'), 'wb'))
 
 
         self.raw_df = raw_df
@@ -25,36 +29,65 @@ class Data():
 
 
         try:
-            df = pickle.load(open('../temp_data/all_df', 'rb'))
+            df = pickle.load(open(os.path.join(temp_data_folder, 'all_df'), 'rb'))
 
         except (OSError, IOError):
             df = self.cleaning(self.raw_df)
-            pickle.dump(df, open('../temp_data/all_df', 'wb'))
+            pickle.dump(df, open(os.path.join(temp_data_folder, 'all_df'), 'wb'))
 
 
         cleaned_size = df.shape[0]
         self.droppedrows = raw_size - cleaned_size
-        
-
         split_indices = self.get_indices(split, df)
-        self.dfs = {split_element : df.loc[indices] for split_element, indices in split_indices.items()}
+        
+        #Include only valid 
+        #Because get_indices looks at all files, so does not exclude the ones dropped during cleaning
+        #We also rename the index to the relative path.
+        filtered_dfs = {}
+        for split, files in split_indices.items():
+            
+            files = [file for file in files if file in list(df.index)]
+            
+            if len(files) == 0:
+                continue
+
+            ix_mapping = {file : file.split('tmp\\')[1] for file in files}
+
+            filtered_df = df.loc[files]
+            filtered_df = filtered_df.rename(index=ix_mapping)
+            filtered_dfs[split] = filtered_df
+
+
+        self.dfs = filtered_dfs
+        
         
 
     def get_indices(self, split, df):
-        data_path = r'C:\Users\s145559\OneDrive - TU Eindhoven\School\JADS\Jaar 2\Thesis\RADON PROJECT\Data\Repositories'
-        repos = os.listdir(data_path)
+        '''Filters the provided dataframe on the desired split and returns the indices of the filtered dataframe'''
+
+        data_path = os.path.join(root_folder, 'dataminer', 'tmp')
+
+        owners = [ item for item in os.listdir(data_path)]
+
+        owner_and_repo = []
+        for owner in owners:
+            repos = os.listdir(os.path.join(data_path, owner))
+            
+            for repo in repos:
+                owner_and_repo.append((owner, repo))
         
         professionalities = ['Example', 'Industry']
 
         if split == 'repo':
-            split_paths ={repo : [data_path + r'\{}'.format(repo)] for repo in repos}
+            split_paths = {f'{oar[0]}-{oar[1]}' : [os.path.join(data_path, oar[0], oar[1])] for oar in owner_and_repo}
 
         elif split == 'professionality':
-            repo_paths ={repo : data_path + r'\{}'.format(repo) for repo in repos}
+            repo_paths = [os.path.join(data_path, oar[0], oar[1]) for oar in owner_and_repo]
             split_paths = {}
             
             for prof in professionalities:
-                split_paths[prof] = [repo_path + r'\{}'.format(prof) for repo_path in repo_paths.values()]
+                
+                split_paths[prof] = [os.path.join(repo_path, prof) for repo_path in repo_paths]
 
 
         elif split == 'purpose':
@@ -70,60 +103,19 @@ class Data():
             split_files = {}
             for split, paths in split_paths.items():
                 
+                
                 files = []
                 for path in paths:
                     files.extend(self.get_yaml_files(path))
-                
-                #make sure dropped files are not included
-                files = [file for file in files if file in list(df.index)]
+
                 split_files[split] = files
         
         return split_files
 
 
-
-
-
-        # datasets_dir = {
-        #     'all'       :   r'C:\Users\s145559\OneDrive - TU Eindhoven\School\JADS\Jaar 2\Thesis\RADON PROJECT\Data\All\All',
-        #     'industry'  :   r'C:\Users\s145559\OneDrive - TU Eindhoven\School\JADS\Jaar 2\Thesis\RADON PROJECT\Data\All\Total Industry',
-        #     'example'   :   r'C:\Users\s145559\OneDrive - TU Eindhoven\School\JADS\Jaar 2\Thesis\RADON PROJECT\Data\All\Total Examples',
-        #     'repos'     :   r'C:\Users\s145559\OneDrive - TU Eindhoven\School\JADS\Jaar 2\Thesis\RADON PROJECT\Data\Repositories',
-        #     'a4c'       :   r'C:\Users\s145559\OneDrive - TU Eindhoven\School\JADS\Jaar 2\Thesis\RADON PROJECT\Data\Repositories\A4C',
-        #     'forge'     :   r'C:\Users\s145559\OneDrive - TU Eindhoven\School\JADS\Jaar 2\Thesis\RADON PROJECT\Data\Repositories\Forge',
-        #     'puccini'   :   r'C:\Users\s145559\OneDrive - TU Eindhoven\School\JADS\Jaar 2\Thesis\RADON PROJECT\Data\Repositories\Puccini'
-        # }
-
-        # purpose_types = ['all', 'topology', 'custom', 'both', 'none']
-
-        # if not dataset in datasets_dir.keys():
-        #     raise ValueError('Enter a valid dataset (all, industry, example, repos, a4c, forge, puccini)')
-
-        # if not file_type in file_types:
-        #     raise ValueError('Enter a valid file type (all, topology, custom, both, none)')
-
-        # try:
-        #     self.raw_df = pickle.load(open('../temp_data/{}_{}_raw_df'.format(metrics_type, dataset), 'rb'))
-            
-        # except (OSError, IOError) as e:
-        #     files = self.get_yaml_files(datasets_dir[dataset])
-        #     json_data = self.json_data(metrics_type, files)
-        #     self.raw_df = self.to_df(json_data)
-        #     pickle.dump(self.raw_df, open('../temp_data/{}_{}_raw_df'.format(metrics_type, dataset), 'wb'))
-
-        # try:
-        #     self.df = pickle.load(open('../temp_data/{}_{}_df'.format(metrics_type, dataset), 'rb'))
-        
-        # except (OSError, IOError) as e:
-        #     self.df = self.cleaning(self.raw_df)
-        #     pickle.dump(self.df, open('../temp_data/{}_{}_df'.format(metrics_type, dataset), 'wb'))
-
-        # self.typefilterpercentage = None
-
-        # if file_type != 'all':
-        #     self.typefilterpercentage = self.filter_filetype(file_type)
-
     def get_yaml_files(self, path):
+        '''Returns all the files with a YAML extension found in the provided path'''
+
         extensions = ['.yaml', '.yml']
         allFiles = []
 
@@ -142,7 +134,9 @@ class Data():
 
 
 
-    def calculate_vectors(self, instanceblock): 
+    def calculate_vectors(self, instanceblock):
+        '''Transforms the provided instanceblock (string) into vectors'''
+
         vectorizer = CountVectorizer(token_pattern='[^\s]+').fit(instanceblock)
         vectorizer = vectorizer.transform(instanceblock)
         vectors =vectorizer.toarray()
@@ -151,6 +145,8 @@ class Data():
 
 
     def calculate_cosine(self, vec1, vec2):
+        '''Calculates the cosine similarity score'''
+
         vec1 = vec1.reshape(1, -1)
         vec2 = vec2.reshape(1, -1)
         return cosine_similarity(vec1, vec2)[0][0]   
@@ -158,6 +154,8 @@ class Data():
 
 
     def check_similarity(self, file_list):
+        '''Calculates the similarity score for each pair of the provided files and returns this in a list'''
+
         string_list = []
         for filePath in file_list:
             with open(filePath, 'r') as file:
@@ -168,7 +166,6 @@ class Data():
 
 
         sims = []
-        #todo: identifier for the similarities.
 
         for i in list(enumerate(vectors)):
             next_index = i[0] + 1
@@ -181,13 +178,16 @@ class Data():
 
 
     def json_data(self, metrics_type, yaml_files):
+        '''Calculates all the metrics over the provided files'''
+
         metrics = calculator.MetricCalculator(yaml_files, metrics_type).getresults
         return metrics
 
 
 
     def to_df(self, json_data):
-        #Transform JSON file to Pandas DataFrame
+        '''Transforms a JSON file to Pandas DataFrame'''
+
         flat_dict = {}
         for key, value in json_data.items():
             df = pd.io.json.json_normalize(value, sep='_')
@@ -199,6 +199,10 @@ class Data():
 
 
     def cleaning(self, df):
+        '''Applies cleaning steps on the provided dataframe. Steps are: delete similar files, 
+        check if files are valid tosca files, drop error message columns, drop rows containing nan
+        and make every column numeric.'''
+
         #Check similarity
         similarity_scores = self.check_similarity(list(df.index))
         similar_files = [pair for pair in similarity_scores if pair[2] == 1]
@@ -224,7 +228,6 @@ class Data():
         ixs_to_keep = [ix for ix in list(df.index) if ix not in to_exclude]
         
         df = df.loc[ixs_to_keep]
-
 
         #Drop NaN rows and error columns, and make numeric
         df = df.drop(labels=(df.filter(regex='msg').columns), axis=1)
@@ -262,52 +265,6 @@ class Data():
         return split_paths
 
 
-goal = 'all'
-data = Data(goal)
-
-
-# # %%
-# def cleaning_test(df):
-#         print('Start size: ', df.shape)
-#         #Check similarity
-#         similarity_scores = pickle.load(open('../temp_data/similarity_scores', 'rb'))
-#         similar_files = [pair for pair in similarity_scores if pair[2] == 1]
-
-#         #Because in order so multiple duplicates will be deleted eventually
-#         #here range because we have a numerical index, in the next one we have the actual index
-#         to_exclude = {pair[1] for pair in similar_files}
-#         print('SIms to delete: ', len(to_exclude))
-#         ixs_to_keep = [ix for ix in range(df.shape[0]) if ix not in to_exclude]
-#         df = df.iloc[ixs_to_keep]
-
-#         print('After sim deletion: ', df.shape)
-
-#         #Check valid tosca
-#         tosca_metrics = ['na_count', 'nc_count', 'nc_min', 'nc_max', 'nc_median', 'nc_mean', 'ni_count',
-#        'nif_count', 'ninp_count', 'ninpc_count', 'nn_count', 'nnt_count', 'nout_count', 'np_count', 
-#        'np_min', 'np_max', 'np_median', 'np_mean', 'nr_count', 'nrt_count', 'ttb_check', 'cdnt_count', 
-#        'cdrt_count', 'cdat_count', 'cdct_count', 'cddt_count', 'cdgt_count', 'cdit_count', 'cdpt_count', 
-#        'nw_count', 'tdb_check', 'nrq_count', 'nsh_count', 'ncys_count', 'tob_check', 'ngc_count', 
-#        'ngp_count', 'ngro_count', 'npol_count', 'nf_count']
-
-#         check_tosca_df = df[tosca_metrics]
-#         check_tosca_df['valid_file'] = check_tosca_df.any(1)
-#         to_exclude = list(check_tosca_df[check_tosca_df['valid_file'] == False].index)
-#         print('Invalids to delete: ', len(to_exclude))
-#         ixs_to_keep = [ix for ix in list(df.index) if ix not in to_exclude]
-        
-#         df = df.loc[ixs_to_keep]
-#         print('After invalides deletion: ', df.shape)
-
-
-#         #Drop NaN rows and error columns, and make numeric
-#         df = df.drop(labels=(df.filter(regex='msg').columns), axis=1)
-#         df = df.dropna()
-#         cols = df.select_dtypes(include=['bool', 'object']).columns
-#         df[cols] = df[cols].astype(int)
-#         df = df.dropna()
-#         print('After rest shit deletion: ', df.shape)
-#         return df
-
-# test_data = Data('all').raw_df
-# x = cleaning_test(test_data)
+repo_data = Data('repo')
+prof_data = Data('professionality')
+purp_data = Data('purpose')
