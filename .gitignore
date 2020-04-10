@@ -3,4 +3,5 @@ tosca_analysis
 .vscode
 results
 temp_data
+dataminer/tmp
 
