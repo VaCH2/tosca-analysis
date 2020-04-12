@@ -13,13 +13,19 @@ class Stats():
         elif isinstance(data, pd.DataFrame):
             self.df = data
 
-        self.sparsity = self.calc_sparsity()
+        self.totalsparsity = self.calc_sparsity()
+        self.featuresparsity = self.calc_featuresparsity()
         self.constants = self.constantvalues()
         self.corrfeatures = self.correlation()
         self.mean = self.calc_mean()
         self.nonzero = self.calc_nonzero()
+        self.zero = self.calc_zero()
         self.min = self.calc_min()
         self.max = self.calc_max()
+        self.stddv = self.calc_stddv()
+        self.q1 = self.calc_q1()
+        self.median = self.calc_median()
+        self.q3 = self.calc_q3()
 
 
     def calc_sparsity(self):
@@ -28,6 +34,14 @@ class Stats():
         for column in self.df.columns:
             zeroes += np.count_nonzero(self.df[column] == 0)
         return zeroes / (self.df.shape[0] * self.df.shape[1])
+    
+    def calc_featuresparsity(self):
+        '''Calculate sparsity per feature'''
+        df = self.df
+        result = pd.DataFrame()
+        result['sparsity'] = df.apply(lambda x: np.count_nonzero(x == 0)/len(x))
+        return result
+
 
     def constantvalues(self):
         '''Collect the variables which have a contant value'''
@@ -50,7 +64,13 @@ class Stats():
     def calc_nonzero(self):
         df = self.df
         result = pd.DataFrame()
-        result['% nonzero'] = df.apply(lambda x: (np.count_nonzero(x) / len(df.index)))
+        result['nonzero'] = df.apply(lambda x: (np.count_nonzero(x)))
+        return result
+
+    def calc_zero(self):
+        df = self.df
+        result = pd.DataFrame()
+        result['zero'] = df.apply(lambda x: (np.count_nonzero(x == 0)))
         return result
 
     def calc_min(self):
@@ -63,6 +83,32 @@ class Stats():
         df = self.df
         result = pd.DataFrame()
         result['max'] = df.apply(lambda x: np.max(x))
+        return result
+
+    def calc_stddv(self):
+        df = self.df
+        result = pd.DataFrame()
+        result['stddv'] = df.apply(lambda x: np.std(x))
+        return result
+
+
+    def calc_q1(self):
+        df = self.df
+        result = pd.DataFrame()
+        result['q1'] = df.apply(lambda x: np.quantile(x, 0.25))
+        return result
+
+
+    def calc_median(self):
+        df = self.df
+        result = pd.DataFrame()
+        result['median'] = df.apply(lambda x: np.quantile(x, 0.5))
+        return result
+    
+    def calc_q3(self):
+        df = self.df
+        result = pd.DataFrame()
+        result['q3'] = df.apply(lambda x: np.quantile(x, 0.75))
         return result
 
 
