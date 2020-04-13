@@ -171,12 +171,8 @@ def main(date_from, date_to):
 
 
 if __name__=='__main__':
-    # date_from = datetime.strptime('2014-03-27 00:00:00', '%Y-%m-%d %H:%M:%S')
-    # date_to = datetime.strptime('2014-03-27 12:00:00', '%Y-%m-%d %H:%M:%S')
-    # now = datetime.strptime('2020-03-31 00:00:00', '%Y-%m-%d %H:%M:%S')
-
-    date_from = datetime.strptime('2014-05-19 00:00:00', '%Y-%m-%d %H:%M:%S')
-    date_to = datetime.strptime('2014-05-19 12:00:00', '%Y-%m-%d %H:%M:%S')
+    date_from = datetime.strptime('2014-03-27 00:00:00', '%Y-%m-%d %H:%M:%S')
+    date_to = datetime.strptime('2014-03-27 12:00:00', '%Y-%m-%d %H:%M:%S')
     now = datetime.strptime('2020-03-31 00:00:00', '%Y-%m-%d %H:%M:%S')
 
     while date_to <= now:
