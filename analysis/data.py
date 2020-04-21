@@ -45,18 +45,15 @@ class Data():
         #We also rename the index to the relative path.
         filtered_dfs = {}
         for split, files in split_indices.items():
-            
-            files = [file for file in files if file in list(df.index)]
+            files = [file.replace('c', 'C', 1) for file in files if file.replace('c', 'C', 1) in list(df.index)]
             
             if len(files) == 0:
                 continue
-
             ix_mapping = {file : file.split('tmp\\')[1] for file in files}
 
             filtered_df = df.loc[files]
             filtered_df = filtered_df.rename(index=ix_mapping)
             filtered_dfs[split] = filtered_df
-
 
         self.dfs = filtered_dfs
         
@@ -156,22 +153,33 @@ class Data():
     def check_similarity(self, file_list):
         '''Calculates the similarity score for each pair of the provided files and returns this in a list'''
 
-        string_list = []
-        for filePath in file_list:
-            with open(filePath, 'r') as file:
-                yml = file.read()
-            string_list.append(yml)
-        
-        vectors = self.calculate_vectors(string_list)
+
+        try:
+            sims = pickle.load(open(os.path.join(temp_data_folder, 'similarity_scores'), 'rb'))
+
+        except (OSError, IOError):
+            string_list = []
+            for filePath in file_list:
+                try:
+                    with open(filePath, 'r') as file:
+                        yml = file.read()
+                except UnicodeDecodeError:
+                    with open(filePath, 'r', encoding='utf-8') as file:
+                        yml = file.read()
+                string_list.append(yml)
+            
+            vectors = self.calculate_vectors(string_list)
 
 
-        sims = []
+            sims = []
 
-        for i in list(enumerate(vectors)):
-            next_index = i[0] + 1
+            for i in list(enumerate(vectors)):
+                next_index = i[0] + 1
 
-            for j in list(enumerate(vectors))[next_index:]:
-                sims.append((i[0], j[0], self.calculate_cosine(i[1], j[1])))
+                for j in list(enumerate(vectors))[next_index:]:
+                    sims.append((i[0], j[0], self.calculate_cosine(i[1], j[1])))
+            
+            pickle.dump(sims, open(os.path.join(temp_data_folder, 'similarity_scores'), 'wb'))
         
         return sims         
 
@@ -203,6 +211,7 @@ class Data():
         check if files are valid tosca files, drop error message columns, drop rows containing nan
         and make every column numeric.'''
 
+        print('size raw df: ', df.shape)
         #Check similarity
         similarity_scores = self.check_similarity(list(df.index))
         similar_files = [pair for pair in similarity_scores if pair[2] == 1]
@@ -213,14 +222,15 @@ class Data():
         ixs_to_keep = [ix for ix in range(df.shape[0]) if ix not in to_exclude]
 
         df = df.iloc[ixs_to_keep]
+        print('size df after similarity deletion: ', df.shape)
 
         #Check valid tosca
         tosca_metrics = ['na_count', 'nc_count', 'nc_min', 'nc_max', 'nc_median', 'nc_mean', 'ni_count',
-       'nif_count', 'ninp_count', 'ninpc_count', 'nn_count', 'nnt_count', 'nout_count', 'np_count', 
-       'np_min', 'np_max', 'np_median', 'np_mean', 'nr_count', 'nrt_count', 'ttb_check', 'cdnt_count', 
+       'nif_count', 'ninp_count', 'ninpc_count', 'nn_count', 'nout_count', 'np_count', 
+       'np_min', 'np_max', 'np_median', 'np_mean', 'nr_count', 'ttb_check', 'cdnt_count', 
        'cdrt_count', 'cdat_count', 'cdct_count', 'cddt_count', 'cdgt_count', 'cdit_count', 'cdpt_count', 
-       'nw_count', 'tdb_check', 'nrq_count', 'nsh_count', 'ncys_count', 'tob_check', 'ngc_count', 
-       'ngp_count', 'ngro_count', 'npol_count', 'nf_count']
+       'nw_count', 'tdb_check', 'nrq_count', 'nsh_count', 'ncys_count', 'tob_check',
+       'ngro_count', 'npol_count', 'nf_count']
 
         check_tosca_df = df[tosca_metrics]
         check_tosca_df['valid_file'] = check_tosca_df.any(1)
@@ -228,6 +238,7 @@ class Data():
         ixs_to_keep = [ix for ix in list(df.index) if ix not in to_exclude]
         
         df = df.loc[ixs_to_keep]
+        print('size df after invalid TOSCA deletion: ', df.shape)
 
         #Drop NaN rows and error columns, and make numeric
         df = df.drop(labels=(df.filter(regex='msg').columns), axis=1)
@@ -235,6 +246,8 @@ class Data():
         cols = df.select_dtypes(include=['bool', 'object']).columns
         df[cols] = df[cols].astype(int)
         df = df.dropna()
+
+        print('size df after NaN and error column drops: ', df.shape)
         return df
 
     
