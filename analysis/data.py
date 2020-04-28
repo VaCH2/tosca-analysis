@@ -39,13 +39,14 @@ class Data():
         cleaned_size = df.shape[0]
         self.droppedrows = raw_size - cleaned_size
         split_indices = self.get_indices(split, df)
-        
         #Include only valid 
         #Because get_indices looks at all files, so does not exclude the ones dropped during cleaning
         #We also rename the index to the relative path.
         filtered_dfs = {}
+        
         for split, files in split_indices.items():
-            files = [file.replace('c', 'C', 1) for file in files if file.replace('c', 'C', 1) in list(df.index)]
+            files = [file.replace('c', 'C', 1) if file[0] == 'c' else file for file in files]
+            files = [file for file in files if file in list(df.index)]
             
             if len(files) == 0:
                 continue
@@ -106,7 +107,7 @@ class Data():
                     files.extend(self.get_yaml_files(path))
 
                 split_files[split] = files
-        
+
         return split_files
 
 
