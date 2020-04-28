@@ -164,8 +164,56 @@ other_cols = [ 'ni_count', 'ncys_count', 'noam_count', 'td_min',
 # # for i, row in files_df.iterrows():
 # #     print('\href{', i, '}{', i.strip('https://'), '}', '&', str(row[0]), '\\')
 
+#----------------------------------------------------------------
+#Here the distribution plots for the splits
 
+# fig = make_subplots(
+#     rows=1,
+#     cols=2,
+#     specs=[[{}, {}]]
+# )
 
+# fig.add_trace(
+#     go.Bar(
+#         x=list(Data('professionality').dfs.keys()),
+#         y=[value.shape[0] for value in Data('professionality').dfs.values()],
+#         marker=dict(color='rgb(0, 0, 100)')
+#     ),
+#     row=1,
+#     col=1
+# )
+
+# fig.add_trace(
+#     go.Bar(
+#         x=list(Data('purpose').dfs.keys()),
+#         y=[value.shape[0] for value in Data('purpose').dfs.values()],
+#         marker=dict(color='rgb(0, 0, 100)')
+#     ),
+#     row=1,
+#     col=2
+# )
+# # fig.update_xaxes(
+# #     tickangle=45
+# # )
+
+# fig.update_layout(
+#     height=600, 
+#     width=2551.2, 
+#     showlegend=False,
+#     bargap=0.2,
+#     margin=dict(
+#         l=0,
+#         r=0,
+#         b=0,
+#         t=0
+#     ),
+#     paper_bgcolor='rgba(255, 255, 255, 1)', #transparant = 0,0,0,0
+#     plot_bgcolor='rgba(255, 255, 255, 1)',
+#     font=dict(size=35)
+# )
+
+# fig.show()
+# fig.write_image(os.path.join(results_folder, 'data_distribution.png'))
 
 
 #----------------------------------------------------------
