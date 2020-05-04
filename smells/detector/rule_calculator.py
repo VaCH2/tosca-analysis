@@ -5,6 +5,8 @@ from io import StringIO
 import json
 import numpy as np
 
+#Depreciated, we don't use rules anymore. We just do what Schwarz and Sharma did. 
+
 def main(custom_set_of_scripts=None):
     path = r'C:\Users\s145559\OneDrive - TU Eindhoven\School\JADS\Jaar 2\Thesis\RADON PROJECT\Data\All\All'
 
