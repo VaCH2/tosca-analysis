@@ -16,11 +16,8 @@ def evaluate_script_with_rule(filePath):
 
     with open(filePath, 'r', encoding='utf8') as f:
         yml = f.read()
-        print(yml)
     yml = StringIO(yml.expandtabs(2))
     cpl_list = CPL(yml).count()
-    print(cpl_list)
-
     smell_counter = 0
 
     for element in cpl_list:
