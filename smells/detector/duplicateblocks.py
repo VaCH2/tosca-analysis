@@ -128,21 +128,25 @@ from smells.utils import calculate_depth
 
 def evaluate_script_with_rule(filePath):
 
-    if isinstance(filePath, StringIO):
-        strio = filePath.getvalue()
-    
-    else:
-        with open(filePath, 'r', encoding='utf8') as f:
-            raw_yml = f.read()
-        raw_yml = StringIO(raw_yml.expandtabs(2))
-        strio = BlueprintMetric(raw_yml).getStringIOobject
+    try:
+        if isinstance(filePath, StringIO):
+            strio = filePath.getvalue()
+        
+        else:
+            with open(filePath, 'r', encoding='utf8') as f:
+                raw_yml = f.read()
+            raw_yml = StringIO(raw_yml.expandtabs(2))
+            strio = BlueprintMetric(raw_yml).getStringIOobject
 
-    strio_length = len(strio)
-    code_chunks = [strio[i:150+i] for i in range(0, strio_length - 149)]
+        strio_length = len(strio)
+        code_chunks = [strio[i:150+i] for i in range(0, strio_length - 149)]
 
-    duplicate_blocks = [chunk for chunk in code_chunks if strio.count(chunk) > 1]
+        duplicate_blocks = [chunk for chunk in code_chunks if strio.count(chunk) > 1]
 
-    return len(duplicate_blocks)
+        return len(duplicate_blocks)
+
+    except Exception as e:
+        return e
 
 
 

@@ -1,23 +1,39 @@
 from smells.detector import longstatement
 from smells.detector import toomanyattributes
+from smells.detector import duplicateblocks
+from smells.detector import longresource
+from smells.detector import insufficientmodularization
+from smells.detector import weakenedmodularity
+
 from smells.detector.rule_calculator import main
 from smells.utils import get_yaml_files
 import numpy as np
 import pandas as pd
+import os
+import pickle
 
-path = r'C:\Users\s145559\OneDrive - TU Eindhoven\School\JADS\Jaar 2\Thesis\RADON PROJECT\Data\All\All'
+root_folder = os.path.dirname(os.path.dirname( __file__ ))
+temp_data_folder = os.path.join(root_folder, 'temp_data')
+data_path = os.path.join(root_folder, 'dataminer', 'tmp')
 
-files = get_yaml_files(path)
+try:
+    smells_df = pickle.load(open(os.path.join(temp_data_folder, 'smells_df'), 'rb'))
 
-results = {}
+except (OSError, IOError):
 
-for script in files:
-    results[script.split('\\')[-1]] = {'ls' : longstatement.evaluate_script_with_rule(script), 
-    'tma' : toomanyattributes.evaluate_script_with_rule(script)}
+    files = get_yaml_files(data_path)
 
-results = pd.DataFrame(results).T
+    results = {}
 
-#%%
-results['ls'].value_counts()
-# %%
-results['tma'].value_counts()
+    for script in files:
+        results[script.split('tmp\\')[1]] = {
+            'ls' : longstatement.evaluate_script_with_rule(script), 
+            'tma' : toomanyattributes.evaluate_script_with_rule(script),
+            'db' : duplicateblocks.evaluate_script_with_rule(script),
+            'lr' : longresource.evaluate_script_with_rule(script),
+            'im' : insufficientmodularization.evaluate_script_with_rule(script),
+            'wm' : weakenedmodularity.evaluate_script_with_rule(script)
+        }
+
+    smells_df = pd.DataFrame(results).T
+    pickle.dump(smells_df, open(os.path.join(temp_data_folder, 'smells_df'), 'wb'))
