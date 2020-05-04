@@ -55,7 +55,7 @@ def calculate_depth(f):
     results = []
 
     for line in f:
-        #line = line[:-1]
+        line = line[:-1]
 
         content = line.strip()
         indent = len(line) - len(content)
@@ -68,8 +68,8 @@ def calculate_depth(f):
                 depth -= 1
                 indentation.pop()
 
-            if indent != indentation[-1]:
-                raise RuntimeError("Bad formatting")
+            # if indent != indentation[-1]:
+            #     raise RuntimeError("Bad formatting")
         
         results.append((content, depth))
     return results
