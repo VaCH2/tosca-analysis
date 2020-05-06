@@ -6,6 +6,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import os
 import math
+import pickle
 
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
@@ -261,110 +262,94 @@ other_cols = [ 'ni_count', 'ncys_count', 'noam_count', 'td_min',
 #Moeten wel minder waardes in. Wellicht filteren op degene met
 #een correlatie boven de 0.5 of onder de -0.5 GEDAAN
 
-    # Blue, maar werkt niet.. te kut met die verschillende schalen
-    # colorscale = [
-    #     [0, '#000064'],
-    #     [0.1, '#000064'],
-    #     [0.1, '#CCCCE0'],
-    #     [0.25, '#CCCCE0'],
-    #     [0.25, '#FFFFFF'],
-    #     [0.75, '#FFFFFF'],
-    #     [0.75, '#CCCCE0'],
-    #     [0.9, '#CCCCE0'],
-    #     [0.9, '#000064'],
-    #     [1, '#000064']
-    # ]
-    
-    #Find highly correlating metrics
 
+# to_exclude = ['nn_entropy', 'na_entropy', 'nr_relative', 'nr_entropy',
+# 'nw_entropy', 'nw_relative', 'ngro_entropy', 'ngro_relative', 'npol_entropy', 'npol_relative',
+# 'cdgt_entropy', 'cdgt_relative', 'cdrt_entropy', 'cdat_entropy', 'cdct_entropy',
+# 'cddt_entropy', 'cdit_entropy', 'nif_min', 'nif_max', 'nif_mean', 'nif_median', 
+# 'nc_median', 'np_median', 'nrq_median', 'td_median']
 
-to_exclude = ['nn_entropy', 'na_entropy', 'nr_relative', 'nr_entropy',
-'nw_entropy', 'nw_relative', 'ngro_entropy', 'ngro_relative', 'npol_entropy', 'npol_relative',
-'cdgt_entropy', 'cdgt_relative', 'cdrt_entropy', 'cdat_entropy', 'cdct_entropy',
-'cddt_entropy', 'cdit_entropy', 'nif_min', 'nif_max', 'nif_mean', 'nif_median', 
-'nc_median', 'np_median', 'nrq_median', 'td_median']
+# #INPUT!
+# # only_count_cols = [col for col in df.columns if '_count' in col or '_relative' in col or '_entropy' in col]
+# # df = df[only_count_cols]
 
-#INPUT!
-# only_count_cols = [col for col in df.columns if '_count' in col or '_relative' in col or '_entropy' in col]
-# df = df[only_count_cols]
+# filtered_df = df.drop(to_exclude, axis=1)
+# filtered_df.rename(columns=lambda x: f'{x.split("_")[0].upper()} {x.split("_")[1]}', inplace=True)
+# correlation_matrix = filtered_df.corr()
 
-filtered_df = df.drop(to_exclude, axis=1)
-filtered_df.rename(columns=lambda x: f'{x.split("_")[0].upper()} {x.split("_")[1]}', inplace=True)
-correlation_matrix = filtered_df.corr()
+# #Identify which combinations hold a certain correlation coefficient
+# for column in correlation_matrix.columns:
+#     for index, val in correlation_matrix[column].iteritems():
+#         if val > 0.7:
+#             if column != index:
+#                 print(column, index, val)
 
-#Identify which combinations hold a certain correlation coefficient
-for column in correlation_matrix.columns:
-    for index, val in correlation_matrix[column].iteritems():
-        if val > 0.7:
-            if column != index:
-                print(column, index, val)
+# for metric in correlation_matrix.columns:
+#     temp_matrix = correlation_matrix.copy()
+#     temp_matrix = temp_matrix.drop(metric)
 
-for metric in correlation_matrix.columns:
-    temp_matrix = correlation_matrix.copy()
-    temp_matrix = temp_matrix.drop(metric)
-
-    if (temp_matrix[metric] > 0.7).any() or (temp_matrix[metric] < -0.7).any():
-        continue
-    else:
-        correlation_matrix = correlation_matrix.drop(metric, axis=1)
-        correlation_matrix = correlation_matrix.drop(metric, axis=0)
+#     if (temp_matrix[metric] > 0.7).any() or (temp_matrix[metric] < -0.7).any():
+#         continue
+#     else:
+#         correlation_matrix = correlation_matrix.drop(metric, axis=1)
+#         correlation_matrix = correlation_matrix.drop(metric, axis=0)
 
     
 
-fig = go.Figure()
+# fig = go.Figure()
 
-fig.add_trace(
-    go.Heatmap(
-        z=correlation_matrix.as_matrix(),
-        x=correlation_matrix.columns,
-        y=correlation_matrix.index,
-        colorscale='RdBu',
-        #colorscale=colorscale,
-        zmid=0,
-        # colorbar=dict(
-        #     tickmode='linear'#,
-            #nticks = 6
-        #     tickvals=[0, 0.1, 0.25, 0.75, 0.9, 1],
-        #     ticktext=['-1', '-0.8', '-0.5', '0.5', '0.8', '1']
-        #     #tick0=-1
-        #     # dtick=1
-        # ),
-        #xtype='scaled',
-        #ytype='scaled',
-        # x0=0,
-        # y0=0,
-        # dx=5,
-        # dy=5,
-        xgap=10,
-        ygap=10
+# fig.add_trace(
+#     go.Heatmap(
+#         z=correlation_matrix.as_matrix(),
+#         x=correlation_matrix.columns,
+#         y=correlation_matrix.index,
+#         colorscale='RdBu',
+#         #colorscale=colorscale,
+#         zmid=0,
+#         # colorbar=dict(
+#         #     tickmode='linear'#,
+#             #nticks = 6
+#         #     tickvals=[0, 0.1, 0.25, 0.75, 0.9, 1],
+#         #     ticktext=['-1', '-0.8', '-0.5', '0.5', '0.8', '1']
+#         #     #tick0=-1
+#         #     # dtick=1
+#         # ),
+#         #xtype='scaled',
+#         #ytype='scaled',
+#         # x0=0,
+#         # y0=0,
+#         # dx=5,
+#         # dy=5,
+#         xgap=10,
+#         ygap=10
 
-    )
-)
+#     )
+# )
 
-fig.update_layout(
-    yaxis=dict(
-        scaleanchor = "x",
-        scaleratio = 1
-    ),
-    paper_bgcolor='rgba(255, 255, 255, 1)',
-    plot_bgcolor='rgba(255, 255, 255, 1)',
-    height=2551.2,
-    width=2551.2,
-    margin=dict(
-        l=0,
-        r=0,
-        b=0,
-        t=20
-    ),
-    font=dict(size=35) #12 is good for 1 figure and 39 columns
-)
+# fig.update_layout(
+#     yaxis=dict(
+#         scaleanchor = "x",
+#         scaleratio = 1
+#     ),
+#     paper_bgcolor='rgba(255, 255, 255, 1)',
+#     plot_bgcolor='rgba(255, 255, 255, 1)',
+#     height=2551.2,
+#     width=2551.2,
+#     margin=dict(
+#         l=0,
+#         r=0,
+#         b=0,
+#         t=20
+#     ),
+#     font=dict(size=35) #12 is good for 1 figure and 39 columns
+# )
 
-fig.update_xaxes(
-            tickangle=45
-        )
+# fig.update_xaxes(
+#             tickangle=45
+#         )
 
-fig.show()
-fig.write_image(os.path.join(results_folder, 'alldata_correlationplot.png'))
+# fig.show()
+# fig.write_image(os.path.join(results_folder, 'alldata_correlationplot.png'))
 
 
 #----------Heatmap with subplots
@@ -734,8 +719,62 @@ fig.write_image(os.path.join(results_folder, 'alldata_correlationplot.png'))
 # fig.write_image(os.path.join(results_folder, 'alldata_histograms.png'))
 
 
+#-----------------SMELL ANALYSIS---------------
+
+# smells_df = pickle.load(open(os.path.join(root_folder, 'temp_data', 'smells_df'), 'rb'))
+# smells_df = smells_df.drop(r'SeaCloudsEU\tosca-parser\Industry\normative_types.yaml')
+# smells_df = smells_df.astype(bool)
+
+# fig = make_subplots(
+#     rows=1,
+#     cols=6,
+#     specs=[[{}, {},{}, {},{}, {}]],
+#     shared_yaxes=True,
+#     subplot_titles = ('Long Statement', 'Too Many Attributes', 'Duplicate Block', 'Long Resource', 'Insufficient Modularization', 'Weakened Modularity'),
+#     vertical_spacing=6
+# )
+
+# for count, smell in enumerate(smells_df.columns):
+#     count += 1
+
+#     fig.add_trace(
+#         go.Bar(
+#             x=smells_df[smell].value_counts().index.values,
+#             y=smells_df[smell].value_counts(),
+#             marker=dict(color=['rgb(210,89,89)', 'rgb(0, 0, 100)'])
+#         ),
+#         row=1,
+#         col=count
+#     )
 
 
 
-# if __name__=='__main__':
-#     main()
+# fig.update_layout(
+#     height=1000, 
+#     width=3500.2, 
+#     showlegend=False,
+#     bargap=0.1,
+#     margin=dict(
+#         l=0,
+#         r=0,
+#         b=0,
+#         t=50
+#     ),
+#     paper_bgcolor='rgba(255, 255, 255, 1)', #transparant = 0,0,0,0
+#     plot_bgcolor='rgba(255, 255, 255, 1)',
+#     font=dict(size=35)
+# )
+
+# fig.update_traces(texttemplate='%{y}', textposition='outside')
+
+# for i in fig['layout']['annotations']:
+#     i['font'] = dict(size=40)
+
+# fig.update_yaxes(
+#     showgrid=True,
+#     gridwidth=5,
+#     gridcolor='rgba(255, 255, 255, 1)'
+# )
+
+# fig.show()
+# fig.write_image(os.path.join(results_folder, 'smell_distribution.png'))
