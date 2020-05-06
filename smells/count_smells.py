@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 import os
 import pickle
+from analysis.data import Data
 
 root_folder = os.path.dirname(os.path.dirname( __file__ ))
 temp_data_folder = os.path.join(root_folder, 'temp_data')
@@ -36,4 +37,10 @@ except (OSError, IOError):
         }
 
     smells_df = pd.DataFrame(results).T
+
+    sound_ixs = Data().dfs.get('all').index.values
+    smells_df = smells_df[smells_df.index.isin(sound_ixs)]
+    smells_df = smells_df.drop(r'SeaCloudsEU\tosca-parser\Industry\normative_types.yaml')
+    
     pickle.dump(smells_df, open(os.path.join(temp_data_folder, 'smells_df'), 'wb'))
+
