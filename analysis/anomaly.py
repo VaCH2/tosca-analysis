@@ -24,9 +24,11 @@ class AnomalyDetector():
             self.df = data.df
         elif isinstance(data, pd.DataFrame):
             self.df = data
+            #self.df = self.df.drop('label', axis=1)
 
-        self.df['outlier_score'] = self.__train_classifiers()
-        self.outliers = self.__identify_outliers(cutoff)
+        score_df = self.df
+        score_df['outlier_score'] = self.__train_classifiers()
+        self.outliers = self.__identify_outliers(cutoff, score_df['outlier_score'])
 
     def __load_classifiers(self):
         outliers_fraction = 0.05
@@ -60,7 +62,6 @@ class AnomalyDetector():
     def __train_classifiers(self):
         scaler = MinMaxScaler(feature_range=(0,1))
         X = scaler.fit_transform(self.df.copy())
-        print(type(X))
         classifiers = self.__load_classifiers()
         scores = np.zeros([X.shape[0], len(classifiers)])
         for i, (clf_name, clf) in enumerate(classifiers.items()):
@@ -76,20 +77,6 @@ class AnomalyDetector():
         combined_scores = maximization(standard_scores)
         return combined_scores
 
-    def __identify_outliers(self, cutoff):
-        outliers = self.df[self.df['outlier_score'] > cutoff]
+    def __identify_outliers(self, cutoff, score_df):
+        outliers = self.df[score_df > cutoff]
         return outliers
-
-
-
-data = Data('tosca_and_general', 'all')
-anomaly = AnomalyDetector(data, 2)
-
-# from pyod.utils.data import generate_data, get_outliers_inliers
-
-# #generate random data with two features
-# X_train, Y_train = generate_data(n_train=200,train_only=True, n_features=2)  
-
-plt.plot(sorted(anomaly.df['outlier_score']))
-plt.show()
-
