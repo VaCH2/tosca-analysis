@@ -1,118 +1,143 @@
-# -nan eruit
-# -sorteren per score
-# - punten toekennen (beste krijgt 20, enabeste 18 en dat dan voor top 10 van true scores. voor silhouette beste 10, )
-# - top 5 op basis van punten. 
-# -balance uitrekenen. Ff bepalen wanneer een blans goed genoeg is.
-# - Overview met scores en balans.
-# - Bepaal hoeveel en welke measurements significant verschillen. Zijn dit er meer of minder dan in zn algemeen?
 
-
-# Dan begint eik de manuele inspectie
-# - Descriptives per optie bekijken (eerst ff alleen top voor elke smell)
-# - Vergelijken met andere splits
-# - Vragen uit afleiden die gevalideerd moeten worden door experts. 
-
-import pickle
+import itertools
 import os
-import csv
-
-from data import Data
-from utils import scale_df
-
-import numpy as np
+import pickle
 import pandas as pd
-from scipy.stats import mannwhitneyu
-
-from plotly.subplots import make_subplots
-import plotly.graph_objects as go
-import plotly.express as px
-
- 	
-# The maximum width in characters of a column in the repr of a pandas data structure
-pd.set_option('display.max_colwidth', -1)
+from clusterconfigurator import ClusterConfigurator
+from data import Data
+from imblearn.over_sampling import RandomOverSampler 
 
 
-root_folder = os.path.dirname(os.path.dirname( __file__ ))
-results_folder = os.path.join(root_folder, 'results', 'clustering_models')
+class SmellEvaluator():
 
-smell = 'db'
+    root_folder = os.path.dirname(os.path.dirname( __file__ ))
+    results_folder = os.path.join(root_folder, 'results', 'clustering_models')
 
-scores = ['sil_score', 'dav_score', 'ch_score', 'ari_score', 'ami_score',
-       'nmi_score', 'homogen_score', 'complete_score', 'v_score', 'fm_score']
-
-internal_scores = ['sil_score', 'dav_score', 'ch_score']
-
-
-df = pd.read_csv(
-    os.path.join(results_folder, f'clustering_scores_{smell} - Copy.csv'),
-    header=0)    
-
-if smell is 'alldummy':
-    df.drop(['ari_score', 'ami_score', 'nmi_score', 'homogen_score', 'complete_score', 'v_score', 'fm_score'], axis=1,  inplace=True)
-
-df = df.dropna() 
-
-df['total_score'] = 0
-if smell is not 'alldummy':
-    for score in scores:
-        if score == 'dav_score':
-            df = df.sort_values(by=score, ascending=True)
-        else:
-            df = df.sort_values(by=score, ascending=False)
-        df = df.reset_index(drop=True)
-        df['total_score'] = df['total_score'] + df.shape[0] - df.index.values
-else:
-    for score in internal_scores:
-        if score == 'dav_score':
-            df = df.sort_values(by=score, ascending=True)
-        else:
-            df = df.sort_values(by=score, ascending=False)
-        df = df.reset_index(drop=True)
-        df['total_score'] = df['total_score'] + df.shape[0] - df.index.values
+    def __init__(self, smell):        
+        self.smell = smell
+        self.df = self.constructDf(self.smell)
+        self.configs = self.getConfigurations()
+        self.evalDf = self.configCalculationAndEvaluation(self.df, self.configs)
+        self.topconfig = self.getTopConfig(self.evalDf)
 
 
-#DIT NOG WEG
-print('Option: ', df['name'].values[0])
-print('Scores: ', df.iloc[0])
+    def getData(self):
+        data = Data().dfs.get('all')
+        data = data.drop(['ttb_check', 'tdb_check', 'tob_check'], axis=1)
+        return data
+
+    #Dit moet de gelabelde set zijn! Wellicht als csv inladen
+    def getSmells(self):
+        smells = pickle.load(open(os.path.join(self.root_folder, 'temp_data', 'smells_df'), 'rb'))
+        smells = smells.drop(r'SeaCloudsEU\tosca-parser\Industry\normative_types.yaml')
+        return smells.astype(bool)
+
+    def oversampleData(self, df):
+        oversample = RandomOverSampler(sampling_strategy='minority', random_state=1)
+        oversampleDf, _ = oversample.fit_resample(df, df['smell'])
+        return oversampleDf
+
+    #.head weghalen!
+    def constructDf(self, smell):
+        smellSeries = self.getSmells()[smell].rename('smell').head(100)
+        df = self.getData()
+        df = df.merge(smellSeries, how='right', left_index=True, right_index=True)
+        df = self.oversampleData(df)
+        return df
+
+    def getConfigurations(self):
+        ex_out = ex_cor = pca = ex_spr = [True, False]
+        prep = [ex_out, ex_cor, pca, ex_spr]
+        algos = [
+            ('agglo', 'complete'), ('agglo', 'average'), ('agglo', 'single'), 
+            ('kmedoids', None), ('specclu', None), 
+            ('gm', 'full'), ('gm', 'tied'), ('gm', 'diag'), ('gm', 'spherical')
+            ]
+        distance = ['braycurtis', 'cosine', 'l1', None]
+
+        configurations = []
+        for algo in algos:
+            if algo[0] is 'gm':
+                distance = [None]
+            elif algo[0] is 'specclu':
+                distance = ['braycurtis', 'cosine', 'l1', None]
+            else:
+                distance = ['braycurtis', 'cosine', 'l1']
+
+            distance_perm = list(itertools.product(*[distance, [algo]]))
+            prep_perm = list(itertools.product(*prep))
+            total_perm = list(itertools.product(*[prep_perm, distance_perm]))
+            total_perm = [(t[0][0], t[0][1], t[0][2], t[0][3], t[1][0], t[1][1]) for t in total_perm]
+            
+            configurations.extend(total_perm)
+        
+        return configurations
+
+    def c2s(self, smell, config):
+        '''Config to string'''
+        return f'smell={smell}_exout={config[0]}_excor={config[1]}_pca={config[2]}_exspr={config[3]}_{config[4]}_{config[5][0]}_{config[5][1]}'
+
+    def getPickle(self, smell, config):
+        return pickle.load(open(os.path.join(self.root_folder, 'temp_data', 'clustering', self.c2s(smell, config)), 'rb'))
+
+    def setPickle(self, smell, config, instance):
+        pickle.dump(instance, open(os.path.join(self.root_folder, 'temp_data', 'clustering', self.c2s(smell, config)), 'wb'))
 
 
-def doeiets(ix, smell):
-    #ix = "excludeoutliers-False_excludecorr-False_pca-True_None_('gm', 'tied')" #This one is for lr
-    #ix = "excludeoutliers-True_excludecorr-False_pca-False_None_('gm', 'spherical')" #This one is for db
+    def configCalculationAndEvaluation(self, df, configs):
+        scoreDict = {}
 
-    file_name = f'clusteringpipeline_smell-{smell}_{ix}'
-    option_df = pickle.load(open(os.path.join(root_folder, 'temp_data', 'clustering', file_name), 'rb'))
-    return option_df['cluster'].value_counts()
+        for config in configs[:5]:
+            try:
+                configInstance = self.getPickle(self.smell, config)
+            except (OSError, IOError):
+                configInstance = ClusterConfigurator(df, config)
+                self.setPickle(self.smell, config, configInstance)
+            
+            scoreDict[config] = configInstance.scores
 
-if smell is not 'alldummy':
-    df['#clusterTrue'] = df.apply (lambda row: doeiets(row['name'], smell)[True], axis=1)
-    df['#clusterFalse'] = df.apply (lambda row: doeiets(row['name'], smell)[False], axis=1)
-
-    print('True clusters: ', df['#clusterTrue'])
-    print('False clusters: ', df['#clusterFalse'])
-
-else:
-    df['balancetop2'] = df.apply (lambda row: doeiets(row['name'], smell).iloc[1] / doeiets(row['name'], smell).iloc[0], axis=1)
-    df = df[df['balancetop2'] > 0.2]
-
-df = df.sort_values(by='total_score', ascending=False)
+        scoreDf = pd.DataFrame.from_dict(scoreDict, orient='index', columns=['sc', 'ch', 'db', 'precision', 'mcc', 'ari'])
+        scoreDf = scoreDf.set_index(pd.Index(scoreDict.keys()))
+        evalDf = self.scoreAggregation(scoreDf, config)  
+        return evalDf
 
 
-#Vanaf hier implementatie van stability check
-file_name = 'clusteringpipeline_smell-db_excludeoutliers-False_excludecorr-True_pca-False_excludespars-False_2_l1_agglo_single'
-mldf = pickle.load(open(os.path.join(root_folder, 'temp_data', 'clustering', file_name), 'rb'))
+    def scoreAggregation(self, scoreDf, config):
+        evalDf = scoreDf.copy(deep=True)
+        evalDf['total_score'] = 0
 
+        for pm in scoreDf.columns:
+            if pm is 'db':
+                evalDf = evalDf.sort_values(by=pm, ascending=True)
+            else:
+                evalDf = evalDf.sort_values(by=pm, ascending=False)
+            evalDf = evalDf.reset_index(drop=True)
+            evalDf['total_score'] = evalDf['total_score'] + evalDf.shape[0] - evalDf.index.values
 
-#Df aanroepen hoeft eik al niet, we willen gewoon een class hebben waar we deze betreffende configuration kunnen runnen met door ons gegeven data. 
-#Of wel want is initiele segmentation
-#Verder belangrijk om random seed te gebruiken wanneer gerebalanced wordt hier (dat ie t zelfde is als in clsutering4)
+        evalDf = evalDf.set_index(scoreDf.index)
+        return evalDf
 
-#Clusterconfigurator(data, smell)
+    def getTopConfig(self, evalDf):
+        return evalDf.iloc[0]
 
 
 
 
 #------------- case study
+
+
+#Loop [:5] nog weghalen!
+test = SmellEvaluator('db')
+
+#Op deze manier kan je dan door een 
+topModel = SmellEvaluator('db').getPickle('db', test.evalDf.iloc[4].name)
+topModel.labels
+
+#Als we dan de stability willen bereken moeten we m ff opnieuw aanroepen(nu tenminste, kan evt wel in loop)
+#top_db = ClusterConfigurator()
+
+
+#----------------old
 #Only top 1
 #df = df.head(10)
 
