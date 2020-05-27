@@ -1,10 +1,23 @@
+# Class om de shit uit te rekenen
+# Main function met intializatie om configurations uit te rekenen en complete class instance op te slaan in pickle
+# constant drop altijd doen!
+
+#Configclass:
+# input: config tuple
+# NO PICKLE LOOKUP!
+# do preprocessing (also constant drop!), cluster calculation, AND performance score calculation
+# object.params 
+# object.model (cluster model)
+# object.scores (df met scores ofzo)
+# object.stability (nog ff kijken hoe dit past)
+# object.name (Dit moet de index van het model zijn)
+
+
 import pickle
 import os
 import csv
 
 from data import Data
-from stats import Stats
-from anomaly import AnomalyDetector
 from utils import scale_df
 
 import numpy as np

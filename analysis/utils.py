@@ -3,7 +3,7 @@ import copy
 
 
 def scale_df(df):
-    copy_df = df.copy()
+    copy_df = df.copy(deep=True)
     scaler = StandardScaler()
     scaled_values = scaler.fit_transform(copy_df)
     copy_df.loc[:,:] = scaled_values

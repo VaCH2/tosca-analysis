@@ -17,9 +17,6 @@ import os
 import csv
 
 from data import Data
-from stats import Stats
-from significance import Significance
-from anomaly import AnomalyDetector
 from utils import scale_df
 
 import numpy as np
@@ -38,7 +35,7 @@ pd.set_option('display.max_colwidth', -1)
 root_folder = os.path.dirname(os.path.dirname( __file__ ))
 results_folder = os.path.join(root_folder, 'results', 'clustering_models')
 
-smell = 'alldummy'
+smell = 'db'
 
 scores = ['sil_score', 'dav_score', 'ch_score', 'ari_score', 'ami_score',
        'nmi_score', 'homogen_score', 'complete_score', 'v_score', 'fm_score']
@@ -77,8 +74,7 @@ else:
 #DIT NOG WEG
 print('Option: ', df['name'].values[0])
 print('Scores: ', df.iloc[0])
-file_name = 'clusteringpipeline_smell-alldummy_excludeoutliers-False_excludecorr-False_pca-False_excludespars-True_2_None_gm_tied'
-try_df = pickle.load(open(os.path.join(root_folder, 'temp_data', 'clustering', file_name), 'rb'))
+
 
 def doeiets(ix, smell):
     #ix = "excludeoutliers-False_excludecorr-False_pca-True_None_('gm', 'tied')" #This one is for lr
@@ -101,6 +97,22 @@ else:
 
 df = df.sort_values(by='total_score', ascending=False)
 
+
+#Vanaf hier implementatie van stability check
+file_name = 'clusteringpipeline_smell-db_excludeoutliers-False_excludecorr-True_pca-False_excludespars-False_2_l1_agglo_single'
+mldf = pickle.load(open(os.path.join(root_folder, 'temp_data', 'clustering', file_name), 'rb'))
+
+
+#Df aanroepen hoeft eik al niet, we willen gewoon een class hebben waar we deze betreffende configuration kunnen runnen met door ons gegeven data. 
+#Of wel want is initiele segmentation
+#Verder belangrijk om random seed te gebruiken wanneer gerebalanced wordt hier (dat ie t zelfde is als in clsutering4)
+
+#Clusterconfigurator(data, smell)
+
+
+
+
+#------------- case study
 #Only top 1
 #df = df.head(10)
 
