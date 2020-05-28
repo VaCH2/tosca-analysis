@@ -24,8 +24,8 @@ df = Data().dfs.get('all')
 #     print('stat: ', stat, 'p-value: ', p)
 
 
-# kmean = KMeans(n_clusters=2)
-# kmean_results = kmean.fit_predict(df.values)
+kmean = KMeans(n_clusters=2)
+kmean_results = kmean.fit_predict(df.values)
 # kmean_sil = silhouette_score(df.values, kmean_results)
 
 
