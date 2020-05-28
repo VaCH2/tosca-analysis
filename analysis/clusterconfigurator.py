@@ -8,6 +8,7 @@ import random
 
 from sklearn.decomposition import PCA
 from sklearn.metrics import pairwise_distances
+from sklearn.metrics.pairwise import euclidean_distances
 
 from sklearn.cluster import AgglomerativeClustering
 from pyclustering.cluster.kmedoids import kmedoids
@@ -34,7 +35,7 @@ class ClusterConfigurator():
         self.algorithm = config[5]
         self.model, self.labels = self.modelConfiguration(self.df)
         self.scores = self.performanceEvaluation(self.labels)
-        self.cardinality = self.cardinality(self.labels)
+        self.cardinality = self.getCardinality(self.labels)
 
 
     def handleConstants(self, df):
@@ -139,9 +140,11 @@ class ClusterConfigurator():
             distancematrix = self.handleDistanceFunction(self.distance, df)
 
         model, predLabels = self.handleAlgorithm(self.algorithm, distancematrix, df)
+
         labels = self.labelMatching(smellLabels, predLabels)
         df = df.merge(labels, how='left', left_index=True, right_index=True)
         return model, df
+
 
 
     def performanceEvaluation(self, df):
@@ -183,16 +186,84 @@ class ClusterConfigurator():
 
         return performanceScores
 
-    def cardinality(self, df):
+    def getCardinality(self, df):
         valueCounts = df['cluster'].value_counts()
         return valueCounts.max() / df.shape[0]
 
+    def getEuclideanDistance(self, clusterOne, clusterTwo):
+        distances = euclidean_distances(clusterOne, clusterTwo)
+        return distances.sum()
+
+    def getClusterToClusterMatching(self, initModelDf, sampleModelDf):
+
+        distances = []
+        for i in initModelDf['cluster'].unique():
+            for j in sampleModelDf['cluster'].unique():
+                xInit = initModelDf[initModelDf['cluster'] == i]
+                xInit = xInit.drop('cluster', axis=1).to_numpy()
+
+                xSample = sampleModelDf[sampleModelDf['cluster'] == j]
+                xSample = xSample.drop('cluster', axis=1).to_numpy()
+
+                distance = self.getEuclideanDistance(xInit, xSample)
+                distances.append([(i, j), distance])
+
+        minDistance = min(distances, key=lambda x: x[1])
+        if minDistance[0] == (True, 0) or minDistance[0] == (False, 1):
+            sampleModelDf['cluster'] = sampleModelDf['cluster'].map({0 : True, 1 : False})
+        else:
+            sampleModelDf['cluster'] = sampleModelDf['cluster'].map({0 : False, 1 : True})
+
+        return sampleModelDf
+
+    
+    def getStability(self):
+        '''Determine configuration stability. We perform a 20 times resampling. When this results in an 
+        mean Adjusted Rand Index of lower than 0.9, we initialize again. Max 3 initializations.
+        Returns the best found mean Adjusted Rand Index together the list of actual ARIs'''
+
+        it = 0
+        meanAri = 0
+        bestIteration = []
+
+        while meanAri < 0.9 and it < 3:
+            if it == 0:
+                initModelDf = self.labels
+                initModelDf = initModelDf.drop('smell', axis=1)
+            else:
+                _, initModelDf = self.modelConfiguration(self.df)
+                initModelDf = initModelDf.drop('smell', axis=1)
+            
+            scoresAri = []
+
+            for i in range(10):
+                if i % 5 == 0:
+                    print('Iteration: ', it, '---- Epoch: ', i)
+
+                sample = initModelDf.drop('cluster', axis=1).sample(frac=0.7)
+
+                if self.distance is None:
+                    distancematrix = None
+                else:
+                    distancematrix = self.handleDistanceFunction(self.distance, sample)
+
+                _, predLabels = self.handleAlgorithm(self.algorithm, distancematrix, sample)
+                sampleModelDf = sample.merge(predLabels, how='left', left_index=True, right_index=True)
+                sampleModelDf = self.getClusterToClusterMatching(initModelDf, sampleModelDf)
+
+                ari = adjusted_rand_score(initModelDf['cluster'].loc[sampleModelDf.index], sampleModelDf['cluster'])
+                scoresAri.append(ari)
+
+            meanAri = np.mean(scoresAri)
+            bestIteration.append([meanAri, scoresAri])
+            it += 1
+
+        return max(bestIteration, key=lambda x: x[0])
 
 
+# from data import Data
+# df = Data().dfs.get('all')
+# df['smell'] = pd.Series([True for x in range(552)] + [False for x in range(552)], index=df.index)
 
-
-from data import Data
-df = Data().dfs.get('all')
-df['smell'] = pd.Series([True for x in range(552)] + [False for x in range(552)], index=df.index)
-       
-test = ClusterConfigurator(df, (True, True, True, True, 'braycurtis', ('agglo', 'average')))
+# model = ClusterConfigurator(df, (True, True, True, False, 'braycurtis', ('agglo', 'average')))
+# test = model.getStability()

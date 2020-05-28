@@ -16,11 +16,13 @@ class SmellEvaluator():
     def __init__(self, smell):        
         self.smell = smell
         self.df = self.constructDf(self.smell)
+        #HIer moet eigenlijk nog een train/test split in zitten.. Nog maken van self.df hier!
+        #De testset naar een nog te schrijven functie sturen die bekijkt of die test set dezelfde cluster zou vormen.
         self.configs = self.getConfigurations()
         self.evalDf = self.configCalculationAndEvaluation(self.df, self.configs)
         self.topconfig = self.getTopConfig(self.evalDf)
 
-
+    
     def getData(self):
         data = Data().dfs.get('all')
         data = data.drop(['ttb_check', 'tdb_check', 'tob_check'], axis=1)
@@ -70,7 +72,6 @@ class SmellEvaluator():
             total_perm = [(t[0][0], t[0][1], t[0][2], t[0][3], t[1][0], t[1][1]) for t in total_perm]
             
             configurations.extend(total_perm)
-        
         return configurations
 
     def c2s(self, smell, config):
@@ -87,7 +88,7 @@ class SmellEvaluator():
     def configCalculationAndEvaluation(self, df, configs):
         scoreDict = {}
 
-        for config in configs[:5]:
+        for config in configs[:20]:
             try:
                 configInstance = self.getPickle(self.smell, config)
             except (OSError, IOError):
@@ -126,12 +127,17 @@ class SmellEvaluator():
 #------------- case study
 
 
-#Loop [:5] nog weghalen!
-test = SmellEvaluator('db')
+#Loop [:20] nog weghalen!
+db = SmellEvaluator('db')
+dbTop = db.getPickle('db', test.topconfig.name)
+
+
 
 #Op deze manier kan je dan door een 
 topModel = SmellEvaluator('db').getPickle('db', test.evalDf.iloc[4].name)
-topModel.labels
+#Or if top one:
+topModel = SmellEvaluator('db').getPickle('db', test.topconfig.name)
+topModel.getStability()
 
 #Als we dan de stability willen bereken moeten we m ff opnieuw aanroepen(nu tenminste, kan evt wel in loop)
 #top_db = ClusterConfigurator()
