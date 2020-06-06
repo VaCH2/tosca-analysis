@@ -16,8 +16,6 @@ class SmellEvaluator():
     def __init__(self, smell):        
         self.smell = smell
         self.df = self.constructDf(self.smell)
-        #HIer moet eigenlijk nog een train/test split in zitten.. Nog maken van self.df hier!
-        #De testset naar een nog te schrijven functie sturen die bekijkt of die test set dezelfde cluster zou vormen.
         self.configs = self.getConfigurations()
         self.evalDf = self.configCalculationAndEvaluation(self.df, self.configs)
         self.topconfig = self.getTopConfig(self.evalDf)
@@ -28,22 +26,19 @@ class SmellEvaluator():
         data = data.drop(['ttb_check', 'tdb_check', 'tob_check'], axis=1)
         return data
 
-    #Dit moet de gelabelde set zijn! Wellicht als csv inladen
     def getSmells(self):
-        smells = pickle.load(open(os.path.join(self.root_folder, 'temp_data', 'smells_df'), 'rb'))
-        smells = smells.drop(r'SeaCloudsEU\tosca-parser\Industry\normative_types.yaml')
+        smells = pd.read_excel('../results/labeling/to_label.xlsx', sheet_name='Sheet1', usecols='B:H', nrows=685, index_col=0)
         return smells.astype(bool)
 
     def oversampleData(self, df):
-        oversample = RandomOverSampler(sampling_strategy='minority', random_state=1)
+        oversample = RandomOverSampler(sampling_strategy=0.5, random_state=1)
         oversampleDf, _ = oversample.fit_resample(df, df['smell'])
         return oversampleDf
 
-    #.head weghalen!
     def constructDf(self, smell):
-        smellSeries = self.getSmells()[smell].rename('smell').head(100)
+        smellSeries = self.getSmells()[smell].rename('smell')
         df = self.getData()
-        df = df.merge(smellSeries, how='right', left_index=True, right_index=True)
+        df = df.merge(smellSeries, how='inner', left_index=True, right_index=True)
         df = self.oversampleData(df)
         return df
 
@@ -88,18 +83,16 @@ class SmellEvaluator():
     def configCalculationAndEvaluation(self, df, configs):
         scoreDict = {}
 
-        for config in configs[:20]:
+        for config in configs:
             try:
                 configInstance = self.getPickle(self.smell, config)
             except (OSError, IOError):
                 configInstance = ClusterConfigurator(df, config)
                 self.setPickle(self.smell, config, configInstance)
             
-            scoreDict[config] = configInstance.scores
-
+            scoreDict[self.c2s(self.smell, config)] = configInstance.scores
         scoreDf = pd.DataFrame.from_dict(scoreDict, orient='index', columns=['sc', 'ch', 'db', 'precision', 'mcc', 'ari'])
-        scoreDf = scoreDf.set_index(pd.Index(scoreDict.keys()))
-        evalDf = self.scoreAggregation(scoreDf, config)  
+        evalDf = self.scoreAggregation(scoreDf, config)
         return evalDf
 
 
@@ -128,16 +121,19 @@ class SmellEvaluator():
 
 
 #Loop [:20] nog weghalen!
+
 db = SmellEvaluator('db')
-dbTop = db.getPickle('db', test.topconfig.name)
+tma = SmellEvaluator('tma')
+im = SmellEvaluator('im')
+# dbTop = db.getPickle('db', test.topconfig.name)
 
 
 
-#Op deze manier kan je dan door een 
-topModel = SmellEvaluator('db').getPickle('db', test.evalDf.iloc[4].name)
-#Or if top one:
-topModel = SmellEvaluator('db').getPickle('db', test.topconfig.name)
-topModel.getStability()
+# #Op deze manier kan je dan door een 
+# topModel = SmellEvaluator('db').getPickle('db', test.evalDf.iloc[4].name)
+# #Or if top one:
+# topModel = SmellEvaluator('db').getPickle('db', test.topconfig.name)
+# topModel.getStability()
 
 #Als we dan de stability willen bereken moeten we m ff opnieuw aanroepen(nu tenminste, kan evt wel in loop)
 #top_db = ClusterConfigurator()
