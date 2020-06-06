@@ -82,6 +82,8 @@ class ClusterConfigurator():
             model = kmedoids(distancematrix.to_numpy(), medoidInitiations, data_type='distance_matrix')
             model.process()
             results = model.get_clusters()
+            # kmedoids model is not pickable, so as a workaround discarded here
+            model = None
             labels = pd.Series(index=df.index)
             labels.iloc[results[0]] = 0
             labels.iloc[results[1]] = 1
@@ -265,5 +267,5 @@ class ClusterConfigurator():
 # df = Data().dfs.get('all')
 # df['smell'] = pd.Series([True for x in range(552)] + [False for x in range(552)], index=df.index)
 
-# model = ClusterConfigurator(df, (True, True, True, False, 'braycurtis', ('agglo', 'average')))
+# model = ClusterConfigurator(df, (False, True, False, False, None, ('gm', 'spherical')))
 # test = model.getStability()
