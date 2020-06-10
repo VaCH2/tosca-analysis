@@ -90,25 +90,35 @@ class SmellEvaluator():
                 configInstance = ClusterConfigurator(df, config)
                 self.setPickle(self.smell, config, configInstance)
             
-            scoreDict[self.c2s(self.smell, config)] = configInstance.scores
-        scoreDf = pd.DataFrame.from_dict(scoreDict, orient='index', columns=['sc', 'ch', 'db', 'precision', 'mcc', 'ari'])
+            scores = configInstance.scores
+            distribution = configInstance.labels['cluster'].value_counts()
+            scores['smellySize'] = distribution.loc[True]
+            scores['soundSize'] = distribution.loc[False]
+            scoreDict[self.c2s(self.smell, config)] = scores
+
+        scoreDf = pd.DataFrame.from_dict(scoreDict, orient='index', columns=['sc', 'ch', 'db', 'precision', 'mcc', 'ari', 'soundSize', 'smellySize'])
         evalDf = self.scoreAggregation(scoreDf, config)
+        evalDf['total_score_percentage'] = (evalDf['total_score'] / 1920) * 100
         return evalDf
 
 
     def scoreAggregation(self, scoreDf, config):
         evalDf = scoreDf.copy(deep=True)
         evalDf['total_score'] = 0
+        evalDf = evalDf.reset_index()
 
         for pm in scoreDf.columns:
             if pm is 'db':
                 evalDf = evalDf.sort_values(by=pm, ascending=True)
+            elif pm in ['smellySize', 'soundSize']:
+                break
             else:
                 evalDf = evalDf.sort_values(by=pm, ascending=False)
             evalDf = evalDf.reset_index(drop=True)
             evalDf['total_score'] = evalDf['total_score'] + evalDf.shape[0] - evalDf.index.values
 
-        evalDf = evalDf.set_index(scoreDf.index)
+        evalDf = evalDf.set_index('index')
+        evalDf = evalDf.sort_values(by='total_score', ascending=False)
         return evalDf
 
     def getTopConfig(self, evalDf):
@@ -118,15 +128,140 @@ class SmellEvaluator():
 
 
 #------------- case study
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
+root_folder = os.path.dirname(os.path.dirname( __file__ ))
+results_folder = os.path.join(root_folder, 'results', 'clustering_models')
 
-#Loop [:20] nog weghalen!
-
+#--------------Table
 db = SmellEvaluator('db')
 tma = SmellEvaluator('tma')
 im = SmellEvaluator('im')
-# dbTop = db.getPickle('db', test.topconfig.name)
 
+#--------------Internal and External measurement figure
+
+def resetIndex(df):
+    df['newIndex'] = [i for i in range(1, (df.shape[0] + 1))]
+    df = df.set_index(keys='newIndex', drop=True)
+    return df
+
+dfsInternal = {
+    'db' : resetIndex(db.evalDf).head(5),
+    'tma' : resetIndex(tma.evalDf).head(5),
+    'im' : resetIndex(im.evalDf).head(5) 
+}
+
+colors = {
+    'db' : '#0057e7',
+    'tma' : '#d62d20',
+    'im' : '#ffa700'
+}
+
+names = {
+    'db' : 'Duplicate Block',
+    'tma' : 'Too many Attributes',
+    'im' : 'Insufficient Modularization'
+}
+
+def createTrace(smell, pm, legend):
+    df = dfsInternal[smell]
+    trace = dict(
+        type = 'scatter',
+        x = df.index,
+        y = df[pm],
+        mode = 'lines',
+        line = dict(color = colors[smell], width=6),
+        name = names[smell],
+        showlegend = legend
+    )
+    return trace
+
+fig = make_subplots(rows=6, cols=1, shared_xaxes=True, subplot_titles=['Silhouette Score (Higher is better)', 'Calinski-Harabasz Index (Higher is better)', 'Davies-Bouldin  Index (Lower is better)', 'Precision (Higher is better)', 'Matthews Correlation Coefficient (Higher is better)', 'Adjusted Rand Index (Higher is better)'], vertical_spacing = 0.05)
+
+legend = True
+for ix, pm in enumerate(['sc', 'ch', 'db', 'precision', 'mcc', 'ari']):
+    ix += 1
+    fig.append_trace(createTrace('db', pm, legend), ix, 1)
+    fig.append_trace(createTrace('tma', pm, legend), ix, 1)
+    fig.append_trace(createTrace('im', pm, legend), ix, 1)
+    legend = False
+
+fig.update_layout(
+    height=2900, 
+    width=2800, 
+    title_text="Top 5 Configurations",
+    paper_bgcolor='rgba(255, 255, 255, 1)',
+    plot_bgcolor='rgba(255, 255, 255, 1)',
+    legend=dict(x=-.1, y=1.2, orientation='h'),
+    font = dict(size=47)
+    )
+
+#fix subplot title size
+for i in fig['layout']['annotations']:
+    i['font'] = dict(size=47)
+
+#fig.show()
+#fig.write_image(os.path.join(results_folder, 'configurationperformance.png'))
+
+
+#-----------Stability
+# (sparse, corr, out, pca, dista, algo)
+dbTopConfigs = [
+    (False, False, False, True, None, ('gm', 'spherical')),
+    (False, False, True, True, None, ('gm', 'spherical')),
+    (False, False, True, True, 'braycurtis', ('kmedoids', None)),
+    (False, False, False, True, None, ('gm', 'tied')),
+    (False, True, True, True, None, ('gm', 'full')),
+]
+ 
+tmaTopConfigs = [
+    (False, False, False, True, None, ('gm', 'full')),
+    (False, False, False, True, None, ('gm', 'tied')),
+    (False, False, False, True, None, ('gm', 'spherical')),
+    (False, False, True, True, None, ('gm', 'spherical')),
+    (False, False, False, True, 'l1', ('agglo', 'complete'))
+]
+
+
+imTopConfigs = [
+    (False, False, False, True, None, ('gm', 'full')),
+    (False, False, False, True, None, ('gm', 'tied')),
+    (False, False, True, True, None, ('gm', 'full')),
+    (False, False, True, True, None, ('gm', 'spherical')),
+    (False, False, False, True, None, ('gm', 'spherical'))
+]
+
+for ix, dbTopConfig in enumerate(dbTopConfigs):
+    dbTopConfigModel = ClusterConfigurator(db.df, dbTopConfig)
+    stability = dbTopConfigModel.getStability()
+    print(f'DB config {ix}: {stability[0]}')
+
+for ix, tmaTopConfig in enumerate(tmaTopConfigs):
+    tmaTopConfigModel = ClusterConfigurator(tma.df, tmaTopConfig)
+    stability = tmaTopConfigModel.getStability()
+    print(f'TmA config {ix}: {stability[0]}')
+
+for ix, imTopConfig in enumerate(imTopConfigs):
+    imTopConfigModel = ClusterConfigurator(im.df, imTopConfig)
+    stability = imTopConfigModel.getStability()
+    print(f'IM config {ix}: {stability[0]}')
+
+
+
+
+# tmaTopConfigModel = ClusterConfigurator(tma.df, tmaTopConfig)
+# tmaStability = tmaTopConfigModel.getStability()
+
+# imTopConfigModel = ClusterConfigurator(im.df, imTopConfig)
+# imStability = imTopConfigModel.getStability()
+
+
+
+
+
+
+#HIER DADELIJK NOG DE TOP ANALYSEREN EN OOK DE VERGELIJKING MET SCHWARZ MAKEN
 
 
 # #Op deze manier kan je dan door een 
