@@ -1,0 +1,17 @@
+cluster4.py
+- csv column names aapassen
+- 'alldummy' opties weg
+- undersamplen moet oversamplen worden op basis van van hulse,
+anders ook ff googelen op Random minority Oversampling
+- Constant measuremts moeten gedropped worden wanneer die er zijn
+- PCA 15 components and standardscaler before
+- K-means naar K-medoids from pyclustering.
+Initial medoid selection Random
+- DBScan weg
+- Check daadwerkelijke aantal configurations
+- Order: Silhouette, CH, DB, precision, MCC and ARI
+
+clustering_evaluation.py
+-scores list 
+-verwijder alldummy
+-doeiets aanpassen, naar wat het doet 
