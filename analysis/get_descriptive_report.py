@@ -721,9 +721,41 @@ other_cols = [ 'ni_count', 'ncys_count', 'noam_count', 'td_min',
 
 #-----------------SMELL ANALYSIS---------------
 
-# smells_df = pickle.load(open(os.path.join(root_folder, 'temp_data', 'smells_df'), 'rb'))
-# smells_df = smells_df.drop(r'SeaCloudsEU\tosca-parser\Industry\normative_types.yaml')
-# smells_df = smells_df.astype(bool)
+#--------table------------
+
+smells = pd.read_excel('../results/labeling/to_label.xlsx', sheet_name='Sheet1', usecols='B:H', nrows=685, index_col=0)
+
+for smell in ['db', 'tma', 'im']:
+    for subset in ['Example', 'Industry']:
+        df = Data('professionality').dfs.get(subset)
+        df = df.merge(smells[smell], how='left', left_index=True, right_index=True)
+        counts = df[smell].value_counts()
+        print(smell, subset, ' absolute: ', counts.loc[1])
+        rel = (counts.loc[1] /(counts.loc[0] + counts.loc[1]))*100
+        print(smell, subset, ' relative: ', rel)
+        print(smell, subset, ' SIZE: ', (counts.loc[0] + counts.loc[1]))
+
+for smell in ['db', 'tma', 'im']:
+    for subset in ['topology', 'custom', 'both', 'none']:
+        df = Data('purpose').dfs.get(subset)
+        df = df.merge(smells[smell], how='left', left_index=True, right_index=True)
+        counts = df[smell].value_counts()
+        print(smell, subset, ' absolute: ', counts.loc[1])
+        rel = (counts.loc[1] /(counts.loc[0] + counts.loc[1]))*100
+        print(smell, subset, ' relative: ', rel)
+        print(smell, subset, ' SIZE: ', (counts.loc[0] + counts.loc[1]))
+
+
+for smell in ['db', 'tma', 'im']:
+    for subset in ['openstack-tosca-parser', 'radon-h2020-radon-particles', 'ystia-forge', 'alien4cloud-csar-public-library', 'tliron-puccini']:
+        df = Data('repo').dfs.get(subset)
+        df = df.merge(smells[smell], how='left', left_index=True, right_index=True)
+        counts = df[smell].value_counts()
+        print(smell, subset, ' absolute: ', counts.loc[1])
+        rel = (counts.loc[1] /(counts.loc[0] + counts.loc[1]))*100
+        print(smell, subset, ' relative: ', rel)
+        print(smell, subset, ' SIZE: ', (counts.loc[0] + counts.loc[1]))
+
 
 # fig = make_subplots(
 #     rows=1,
@@ -734,18 +766,32 @@ other_cols = [ 'ni_count', 'ncys_count', 'noam_count', 'td_min',
 #     vertical_spacing=6
 # )
 
-# for count, smell in enumerate(smells_df.columns):
+# for count, smell in enumerate(['ls', 'db', 'lr', 'tma', 'im', 'wm']):
 #     count += 1
 
-#     fig.add_trace(
-#         go.Bar(
-#             x=smells_df[smell].value_counts().index.values,
-#             y=smells_df[smell].value_counts(),
-#             marker=dict(color=['rgb(210,89,89)', 'rgb(0, 0, 100)'])
-#         ),
-#         row=1,
-#         col=count
-#     )
+#     if smell in ['db', 'tma', 'im']:
+
+#         fig.add_trace(
+#             go.Bar(
+#                 x=smells[smell].value_counts().index.values,
+#                 y=smells[smell].value_counts(),
+#                 marker=dict(color=['rgb(210,89,89)', 'rgb(0, 0, 100)'])
+#             ),
+#             row=1,
+#             col=count
+#         )
+    
+#     else:
+#         fig.add_trace(
+#             go.Bar(
+#                 x=smells[smell].value_counts().index.values,
+#                 y=smells[smell].value_counts(),
+#                 marker=dict(color=['rgb(255, 207, 193)', 'rgb(157, 119, 236)'])
+#             ),
+#             row=1,
+#             col=count
+#         )
+
 
 
 
