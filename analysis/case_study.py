@@ -232,16 +232,6 @@ def getRuleLabels(ix, smell):
 def constructDf(ix, smell):
     '''Copied from the clusterEvaluator class to enable data balancing.
     Afterwards, we filterout the identified indexes of the subset again'''
-
-    # smellSeries = getGroundTruth()[smell].rename('smell')
-    # df = Data().dfs.get('all')
-    # df = df.drop(['ttb_check', 'tdb_check', 'tob_check'], axis=1)
-    # df = df.merge(smellSeries, how='inner', left_index=True, right_index=True)
-    # df = df[df.index.isin(ix)]
-
-    # df = df.reset_index()
-    # oversample = RandomOverSampler(sampling_strategy=0.5, random_state=1)
-    #clusterDf, _ = oversample.fit_resample(df, df['smell'])
     if smell == 'db':
         clusterDf = db.df
     elif smell == 'tma':
