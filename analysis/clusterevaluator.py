@@ -38,6 +38,7 @@ class SmellEvaluator():
         smellSeries = self.getSmells()[smell].rename('smell')
         df = self.getData()
         df = df.merge(smellSeries, how='inner', left_index=True, right_index=True)
+        df = df.reset_index()
         df = self.oversampleData(df)
         return df
 
@@ -80,6 +81,7 @@ class SmellEvaluator():
 
 
     def configCalculationAndEvaluation(self, df, configs):
+        df = df.drop('index', axis=1)
         scoreDict = {}
 
         for config in configs:
