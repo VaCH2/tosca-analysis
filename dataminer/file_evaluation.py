@@ -9,6 +9,9 @@ import yaml
 root_folder = os.path.dirname(os.path.abspath(__file__))
 root_folder = os.path.join(root_folder, 'tmp')
 
+if not os.path.exists(root_folder):
+    os.makedirs(root_folder)
+
 example_indicators = ['test', 'tests', 'example', 'examples', 'hello-world', 'helloworld', 'tutorial']
 
 
