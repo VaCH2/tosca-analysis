@@ -1,17 +1,17 @@
-from smells.detector import longstatement
-from smells.detector import toomanyattributes
-from smells.detector import duplicateblocks
-from smells.detector import longresource
-from smells.detector import insufficientmodularization
-from smells.detector import weakenedmodularity
+from classes.rulebased.detector import longstatement
+from classes.rulebased.detector import toomanyattributes
+from classes.rulebased.detector import duplicateblocks
+from classes.rulebased.detector import longresource
+from classes.rulebased.detector import insufficientmodularization
+from classes.rulebased.detector import weakenedmodularity
 
-from smells.detector.rule_calculator import main
-from smells.utils import get_yaml_files
+from classes.rulebased.detector.rule_calculator import main
+from classes.rulebased.utils import get_yaml_files
 import numpy as np
 import pandas as pd
 import os
 import pickle
-from analysis.data import Data
+from classes.data import Data
 
 root_folder = os.path.dirname(os.path.dirname( __file__ ))
 temp_data_folder = os.path.join(root_folder, 'temp_data')

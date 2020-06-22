@@ -1,6 +1,6 @@
-from stats import Stats
-from anomaly import AnomalyDetector
-from utils import scale_df
+from classes.stats import Stats
+from classes.anomaly import AnomalyDetector
+from classes.utils import scale_df
 
 import numpy as np
 import pandas as pd

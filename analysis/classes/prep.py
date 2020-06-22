@@ -1,12 +1,12 @@
 import pandas as pd
 import numpy as np
-from data import Data
-from utils import scale_df
+from classes.data import Data
+from classes.utils import scale_df
 import pickle
 from scipy.stats import chi2_contingency as chi2
 from sklearn.metrics import pairwise_distances
 from scipy.stats import spearmanr
-from anomaly import AnomalyDetector
+from classes.anomaly import AnomalyDetector
 
 class Preprocessing():
     def __init__(self, data, constants=None, corr=None, pca=False, anomalies=None, customdistance=None):

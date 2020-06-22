@@ -1,10 +1,10 @@
 import os
 from io import StringIO
-from smells.metrics.blueprint_metric import BlueprintMetric
-from smells.utils import keyValueList
+from classes.rulebased.metrics.blueprint_metric import BlueprintMetric
+from classes.rulebased.utils import keyValueList
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import CountVectorizer
-from smells.utils import calculate_depth
+from classes.rulebased.utils import calculate_depth
 
 # def evaluate_script_with_rule(filePath):
 
@@ -147,12 +147,3 @@ def evaluate_script_with_rule(filePath):
 
     except Exception as e:
         return e
-
-
-
-
-#path = r'C:\Users\s145559\OneDrive - TU Eindhoven\School\JADS\Jaar 2\Thesis\RADON PROJECT\Data\All\All\types.yaml'
-#path = r'C:\Users\s145559\OneDrive - TU Eindhoven\School\JADS\Jaar 2\Thesis\RADON PROJECT\Data\All\All\tosca-node-type (2).yml'
-
-#path = 'db_test.yaml'
-#results = evaluate_script_with_rule(path)

@@ -2,8 +2,8 @@ import itertools
 import os
 import pickle
 import pandas as pd
-from clusterconfigurator import ClusterConfigurator
-from data import Data
+from classes.clusterconfigurator import ClusterConfigurator
+from classes.data import Data
 from imblearn.over_sampling import RandomOverSampler 
 
 

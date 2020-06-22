@@ -7,15 +7,15 @@ import numpy as np
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 
-from clusterevaluator import SmellEvaluator
-from clusterconfigurator import ClusterConfigurator
-from data import Data 
-import cliffsDelta
+from classes.clusterevaluator import SmellEvaluator
+from classes.clusterconfigurator import ClusterConfigurator
+from classes.data import Data 
+import classes.cliffsDelta
 
 #Rule-based Detector
-from smells.detector import toomanyattributes
-from smells.detector import duplicateblocks
-from smells.detector import insufficientmodularization
+from classes.rulebased.detector import toomanyattributes
+from classes.rulebased.detector import duplicateblocks
+from classes.rulebased.detector import insufficientmodularization
 
 from imblearn.over_sampling import RandomOverSampler 
 from sklearn.metrics import precision_score

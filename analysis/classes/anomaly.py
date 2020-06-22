@@ -1,5 +1,5 @@
-from utils import scale_df
-from data import Data
+from classes.utils import scale_df
+from classes.data import Data
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler

@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from data import Data
+from classes.data import Data
 import pickle
 
 

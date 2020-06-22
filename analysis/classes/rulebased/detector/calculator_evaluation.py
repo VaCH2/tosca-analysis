@@ -1,7 +1,7 @@
-from smells.detector import longstatement
-from smells.detector import toomanyattributes
-from smells.detector.rule_calculator import main
-from smells.utils import get_yaml_files
+from classes.rulebased.detector import longstatement
+from classes.rulebased.detector import toomanyattributes
+from classes.rulebased.detector.rule_calculator import main
+from classes.rulebased.utils import get_yaml_files
 import numpy as np
 import random
 
