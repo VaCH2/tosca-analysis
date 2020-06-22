@@ -19,7 +19,7 @@ if not os.path.exists(results_folder):
 
 custom_font=dict(family="Open Sans", size=6, color="#7f7f7f")
 
-#data = Data()
+data = Data()
 df = data.dfs.get('all')
 
 #Drop unused columns
@@ -292,7 +292,7 @@ fig = go.Figure()
 
 fig.add_trace(
     go.Heatmap(
-        z=correlation_matrix.as_matrix(),
+        z=correlation_matrix.to_numpy(),
         x=correlation_matrix.columns,
         y=correlation_matrix.index,
         colorscale='RdBu',
@@ -365,7 +365,7 @@ for i, column in enumerate(used_cols):
 
     fig.add_trace(
         go.Heatmap(
-            z=correlation_matrix.as_matrix(),
+            z=correlation_matrix.to_numpy(),
             x=correlation_matrix.columns,
             y=correlation_matrix.index,
             colorscale='RdBu',
@@ -695,8 +695,7 @@ fig.show()
 #-----------------SMELL ANALYSIS---------------
 
 #--------table------------
-
-smells = pd.read_excel('../results/labeling/to_label.xlsx', sheet_name='Sheet1', usecols='B:H', nrows=685, index_col=0)
+smells = pd.read_excel('results/labeling/to_label.xlsx', sheet_name='Sheet1', usecols='B:H', nrows=685, index_col=0)
 
 #Professionalism
 for smell in ['db', 'tma', 'im']:
