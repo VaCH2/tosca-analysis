@@ -2,13 +2,16 @@ import os
 import pandas as pd
 
 #calculator is the class that calculates the source code measurements upon provided TOSCA blueprints
-from toscametrics import calculator
+#from toscametrics import calculator
 import pickle
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 root_folder = os.path.dirname(os.path.dirname( __file__ ))
-temp_data_folder = os.path.join(root_folder, 'temp_data', 'source_code_measurements')
+temp_data_folder = os.path.join(root_folder, '..', 'temp_data', 'source_code_measurements')
+
+if not os.path.exists(temp_data_folder):
+    os.makedirs(temp_data_folder)
 
 class Data():
     def __init__(self, split='all', metrics_type='tosca_and_general'):
@@ -47,6 +50,8 @@ class Data():
         
         for split, files in split_indices.items():
             files = [file.replace('c', 'C', 1) if file[0] == 'c' else file for file in files]
+            files = [file.replace('\\..\\', '\\') for file in files] 
+            print(files)
             files = [file for file in files if file in list(df.index)]
             
             if len(files) == 0:
@@ -64,7 +69,7 @@ class Data():
     def get_indices(self, split, df):
         '''Filters the provided dataframe on the desired split and returns the indices of the filtered dataframe'''
 
-        data_path = os.path.join(root_folder, '..', 'dataminer', 'tmp')
+        data_path = os.path.join(root_folder, os.pardir, 'dataminer', 'tmp')
 
         owners = [ item for item in os.listdir(data_path)]
 
@@ -108,7 +113,6 @@ class Data():
                     files.extend(self.get_yaml_files(path))
 
                 split_files[split] = files
-
         return split_files
 
 
