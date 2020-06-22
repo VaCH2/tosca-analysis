@@ -1,7 +1,7 @@
 import json
 import os
 from io import StringIO
-from smells.utils import calculate_depth
+from classes.rulebased.utils import calculate_depth
 
 
 def evaluate_script_with_rule(filePath):
@@ -37,6 +37,3 @@ def evaluate_script_with_rule(filePath):
 
     except Exception as e:
         return e
-
-# path = r'C:\Users\s145559\OneDrive - TU Eindhoven\School\JADS\Jaar 2\Thesis\RADON PROJECT\GIT projects\ANALYSIS\dataminer\tmp\vmware-archive\tosca-blueprints\Industry\blueprint_1.yaml'
-# result = evaluate_script_with_rule(path)

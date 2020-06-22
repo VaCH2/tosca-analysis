@@ -1,7 +1,7 @@
 import json
 import os
 from io import StringIO
-from smells.metrics.blueprint_metric import BlueprintMetric
+from classes.rulebased.metrics.blueprint_metric import BlueprintMetric
 from toscametrics.yml.loc import LOC
 
 
@@ -38,9 +38,3 @@ def evaluate_script_with_rule(filePath):
 
     except Exception as e:
         return e
-
-
-
-
-# path = r'C:\Users\s145559\OneDrive - TU Eindhoven\School\JADS\Jaar 2\Thesis\RADON PROJECT\GIT projects\ANALYSIS\dataminer\tmp\SeaCloudsEU\SeaCloudsPlatform\Industry\webchat_adp-iaas.yml'
-# result = evaluate_script_with_rule(path)

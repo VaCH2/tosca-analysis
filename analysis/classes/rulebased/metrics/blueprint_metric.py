@@ -1,6 +1,6 @@
 import yaml
 from io import StringIO
-from smells.metrics.exceptions import NotBlueprintError, NotStringIOError
+from classes.rulebased.metrics.exceptions import NotBlueprintError, NotStringIOError
 
 class BlueprintMetric():
 
