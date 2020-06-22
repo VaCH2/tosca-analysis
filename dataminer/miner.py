@@ -51,7 +51,8 @@ QUERY = """
 
 class GithubMiner():
 
-    def __init__(self, 
+    def __init__(self,
+                token, 
                  date_from: datetime, 
                  date_to: datetime
                 ):
@@ -69,7 +70,7 @@ class GithubMiner():
         """
         Run a graphql query 
         """
-        request = requests.post('https://api.github.com/graphql', json={'query': query}, headers={'Authorization': 'token 0d0ff8e340e1c6cdaa9aacbff6206b55cbbb63f4'})
+        request = requests.post('https://api.github.com/graphql', json={'query': query}, headers={'Authorization': token})
         
         if request.status_code == 200:
             return request.json()
@@ -140,9 +141,10 @@ class GithubMiner():
                 yield repo
 
 
-def main(date_from, date_to):
+def main(token, date_from, date_to):
     
     github_miner = GithubMiner(
+        token=token,
         date_from=date_from,
         date_to=date_to
     )
