@@ -2,7 +2,6 @@ from classes.data import Data
 from classes.stats import Stats
 import numpy as np
 import pandas as pd
-import seaborn as sns
 import matplotlib.pyplot as plt
 import os
 import math
@@ -12,13 +11,15 @@ from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 import plotly.figure_factory as ff
 
-sns.set(style='white')
 root_folder = os.path.dirname(os.path.dirname( __file__ ))
 results_folder = os.path.join(root_folder, 'results', 'descriptive_report')
 
+if not os.path.exists(results_folder):
+    os.makedirs(results_folder)
+
 custom_font=dict(family="Open Sans", size=6, color="#7f7f7f")
 
-data = Data()
+#data = Data()
 df = data.dfs.get('all')
 
 #Drop unused columns
