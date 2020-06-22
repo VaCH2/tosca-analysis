@@ -10,6 +10,9 @@ import os
 root_folder = os.path.dirname(os.path.dirname( __file__ ))
 results_folder = os.path.join(root_folder, 'results', 'descriptive_report')
 
+if not os.path.exists(results_folder):
+    os.makedirs(results_folder)
+
 def get_rejections(split, threshold, discardzeroes):
     data = Data(split)
     keys = list(data.dfs.keys())
@@ -116,7 +119,8 @@ for split in splits:
             t=30
         ),
     )
-
+    
+    fig.show()
     #fig.write_image(os.path.join(results_folder, f'{split}_rejectionbar.png'))
 
 #df_pvalues.to_excel(os.path.join(results_folder, f'splits_rejectionpvalues.xlsx'))
