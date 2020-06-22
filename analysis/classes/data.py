@@ -50,7 +50,7 @@ class Data():
         
         for split, files in split_indices.items():
             files = [file.replace('c', 'C', 1) if file[0] == 'c' else file for file in files]
-            files = [file.replace('\\..\\', '\\') for file in files] 
+            files = [file.replace('\\analysis\\..\\', '\\') for file in files] 
             files = [file for file in files if file in list(df.index)]
             
             if len(files) == 0:
