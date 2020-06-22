@@ -54,7 +54,7 @@ def get_rejections(split, threshold, discardzeroes):
 def stats_per_split(split, sig_ix):
     data = Data(split).dfs
     for key, value in data.items():
-        print(key)
+
         #value = value[value['nn_count'] != 0]
         test = ['alien4cloud-csar-public-library', 'openstack-tosca-parser', 'radon-h2020-radon-particles', 'tliron-puccini', 'ystia-forge']
         if key in test:
