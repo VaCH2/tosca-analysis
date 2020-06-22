@@ -189,9 +189,6 @@ fig.add_trace(
     row=1,
     col=2
 )
-# fig.update_xaxes(
-#     tickangle=45
-# )
 
 fig.update_layout(
     height=600, 
@@ -204,7 +201,7 @@ fig.update_layout(
         b=0,
         t=0
     ),
-    paper_bgcolor='rgba(255, 255, 255, 1)', #transparant = 0,0,0,0
+    paper_bgcolor='rgba(255, 255, 255, 1)',
     plot_bgcolor='rgba(255, 255, 255, 1)',
     font=dict(size=35)
 )
@@ -298,22 +295,7 @@ fig.add_trace(
         x=correlation_matrix.columns,
         y=correlation_matrix.index,
         colorscale='RdBu',
-        #colorscale=colorscale,
         zmid=0,
-        # colorbar=dict(
-        #     tickmode='linear'#,
-            #nticks = 6
-        #     tickvals=[0, 0.1, 0.25, 0.75, 0.9, 1],
-        #     ticktext=['-1', '-0.8', '-0.5', '0.5', '0.8', '1']
-        #     #tick0=-1
-        #     # dtick=1
-        # ),
-        #xtype='scaled',
-        #ytype='scaled',
-        # x0=0,
-        # y0=0,
-        # dx=5,
-        # dy=5,
         xgap=10,
         ygap=10
 
@@ -335,7 +317,7 @@ fig.update_layout(
         b=0,
         t=20
     ),
-    font=dict(size=35) #12 is good for 1 figure and 39 columns
+    font=dict(size=35) 
 )
 
 fig.update_xaxes(
@@ -523,10 +505,10 @@ plot_cutoffs = {
 df = df[complex_cols]
 
 new_df = pd.DataFrame(index=df.index)
-#Deze loop om de columns te splitten in zero en nonzero
+#This loop to split columns in zero en nonzero
 for column in df.columns:
 
-    #Hier de cutoff eraf trekken
+    #Filter cutoff
     if plot_cutoffs[column] != None:
         df[column] = df[column].where(df[column] < plot_cutoffs[column])
 
@@ -541,7 +523,6 @@ custom_font=dict(size=35)
 
 cols = 11
 rows = 3 #Rows zelf invullen size=2, com=3, sizecom_incl=3, sizecom_app=13, other=3
-#rows = math.ceil(len(df.columns)/cols) + math.ceil(len(df.columns)/cols**2) +6
 fig = make_subplots(
     rows=rows,
     cols=cols,
@@ -549,7 +530,7 @@ fig = make_subplots(
     #REPLACE ZERO columns with ''
     subplot_titles= tuple([name.split('_real')[0] if 'zero' not in name else ' ' for name in df.columns]),
 
-    #listcomprehension voor aantal rows
+    #listcomprehension for number of rows
     specs=[ [{}, {}, None, {}, {}, None, {}, {}, None, {}, {}] for row in range(rows)],
     column_widths=[0.0287, 0.1763, 0.06, 0.0287, 0.1763, 0.06, 0.0287, 0.1763, 0.06, 0.0287, 0.1763]
 )
@@ -612,7 +593,6 @@ for i, column in enumerate(df.columns):
         )
 
     elif len(value_counts) < 6:
-        #print('bar less than 6: ', column)
         fig.add_trace(
             go.Bar(
                 x=list(value_counts.index),
@@ -625,7 +605,6 @@ for i, column in enumerate(df.columns):
 
     #If there are floats (mean metric for example)
     elif sum([ix % 1 for ix in value_counts.index]) != 0:
-        #print('floats here: ', column)
         fig.add_trace(
             go.Histogram(
                 x=counts,
@@ -653,7 +632,6 @@ for i, column in enumerate(df.columns):
         )
 
     else:
-        #print('None of the categories: ', column)
         fig.add_trace(
             go.Histogram(
                 x=counts,
