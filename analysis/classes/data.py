@@ -64,7 +64,7 @@ class Data():
     def get_indices(self, split, df):
         '''Filters the provided dataframe on the desired split and returns the indices of the filtered dataframe'''
 
-        data_path = os.path.join(root_folder, 'dataminer', 'tmp')
+        data_path = os.path.join(root_folder, '..', 'dataminer', 'tmp')
 
         owners = [ item for item in os.listdir(data_path)]
 
