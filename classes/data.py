@@ -1,15 +1,16 @@
 import os
 import pandas as pd
+
+#calculator is the class that calculates the source code measurements upon provided TOSCA blueprints
 from toscametrics import calculator
 import pickle
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 root_folder = os.path.dirname(os.path.dirname( __file__ ))
-temp_data_folder = os.path.join(root_folder, 'temp_data')
+temp_data_folder = os.path.join(root_folder, 'temp_data', 'source_code_measurements')
 
 class Data():
-    #desnoods die metrics type hierin code ipv in die calculator en dan gewoon die hardcoden op 'all'
     def __init__(self, split='all', metrics_type='tosca_and_general'):
         '''A dictionary were the keys are the possible alternatives in the provided split.
         The value is the corresponding, filtered dataframe.'''
