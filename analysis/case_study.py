@@ -25,7 +25,7 @@ from scipy.stats import mannwhitneyu
 root_folder = os.path.dirname(os.path.dirname( __file__ ))
 results_folder = os.path.join(root_folder, 'results', 'case_study')
 data_folder = os.path.join(root_folder, 'dataminer', 'tmp')
-temp_folder = os.path.join(root_folder, 'temp_data', 'rulebased')
+temp_folder = os.path.join(root_folder, 'temp_data', 'case_study')
 
 
 #--------------Table

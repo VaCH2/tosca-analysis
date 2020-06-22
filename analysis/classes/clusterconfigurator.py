@@ -261,11 +261,3 @@ class ClusterConfigurator():
             it += 1
 
         return max(bestIteration, key=lambda x: x[0])
-
-
-# from data import Data
-# df = Data().dfs.get('all')
-# df['smell'] = pd.Series([True for x in range(552)] + [False for x in range(552)], index=df.index)
-
-# model = ClusterConfigurator(df, (False, True, False, False, None, ('gm', 'spherical')))
-# test = model.getStability()

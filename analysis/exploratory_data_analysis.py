@@ -1,5 +1,5 @@
-from data import Data
-from stats import Stats
+from classes.data import Data
+from classes.stats import Stats
 import numpy as np
 import pandas as pd
 import seaborn as sns

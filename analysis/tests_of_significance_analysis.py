@@ -1,6 +1,6 @@
-from data import Data
-from stats import Stats
-from significance import Significance
+from classes.data import Data
+from classes.stats import Stats
+from classes.significance import Significance
 import itertools as it
 import plotly.express as px
 import plotly.graph_objects as go
@@ -117,8 +117,8 @@ for split in splits:
         ),
     )
 
-    fig.write_image(os.path.join(results_folder, f'{split}_rejectionbar.png'))
+    #fig.write_image(os.path.join(results_folder, f'{split}_rejectionbar.png'))
 
-df_pvalues.to_excel(os.path.join(results_folder, f'splits_rejectionpvalues.xlsx'))
+#df_pvalues.to_excel(os.path.join(results_folder, f'splits_rejectionpvalues.xlsx'))
 
 

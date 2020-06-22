@@ -57,14 +57,6 @@ class Preprocessing():
         else:
             distances = pairwise_distances(scaled, metric=customdistance)
             matrix = pd.DataFrame(data=distances, index=self.df.index, columns=self.df.index)
-
-        # matrix = pd.DataFrame(index=self.df.index, columns=self.df.index)
-        # # Werkt niet voor chi2 omdat de data veel te sparse is.. Stond ergens een minimale count van 5 per kolom. 
-        # #Nu maar braycurtis genomen maar weet niet of hier wat haken en ogen aan zitten..
-        # # Hier staat wat uitgelegd over de 2: http://84.89.132.1/~michael/stanford/maeb5.pdf 
-        # combs = [ ((x,y), braycurtis(self.df.loc[[x], :].to_numpy(),self.df.loc[[y], :].to_numpy())) for x in list(self.df.index) for y in list(self.df.index)]
-        # for element in combs:
-        #     matrix.loc[element[0][0], element[0][1]] = element[1]
         return matrix
 
 
@@ -78,15 +70,5 @@ class Preprocessing():
         df = df.drop(to_drop)
 
         print('After dropping {} datapoints, there are {} datapoints left'.format(len(to_drop), df.shape[0]))
-        
-        # filtered_datasets = []
-        # for dataset in datasets:
-            
-        #     print('originele grootte df: ', dataset.df.shape[0])
-        #     print('aantal anomalies: ', len(to_drop))
-        #     new_df = dataset.df.drop(to_drop)
-        #     print('nieuwe lengte: ', new_df.shape[0])
-
-        #     filtered_datasets.append(Stats(new_df))
 
         return df

@@ -110,7 +110,3 @@ class Stats():
         result = pd.DataFrame()
         result['q3'] = df.apply(lambda x: np.quantile(x, 0.75))
         return result
-
-
-#df = Data('tosca_and_general', 'all', 'topology')
-#test = Preprocessing(df, 'hoi')
