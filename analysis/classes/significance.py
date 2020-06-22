@@ -13,11 +13,9 @@ class Significance():
             raise ValueError('datasets do not contain the same columns')
 
         if len(self.data1) < 20 or len(self.data2) < 20:
-            #print('One of the samples contained less than 20 data points!')
             self.rejected_features = pd.DataFrame()
 
         else:
-            print('Both samples contained more than 20 data points! Total: ')
             uncorrected_p_values = self.__calc_sig(discardzeroes)
             self.uncorrected_p_values = uncorrected_p_values.dropna() 
             self.sig = self.__multitest_correction(self.uncorrected_p_values, 0.01)
