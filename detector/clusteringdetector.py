@@ -25,19 +25,20 @@ def main():
     value = df.to_dict(orient='records')[0]
     df = pd.DataFrame.from_dict({path : value}).T
     df = df.drop(['ttb_check', 'tdb_check', 'tob_check'], axis=1)
-
-    configObject = pickle.load(open('models/config.pkl', 'rb'))
-    principalComponents = configObject.principalComponents
     array = scale_df(df)
-    array = principalComponents.transform(array)
 
-    model = configObject.model
-    label = model.predict(array)
+    for smell in [('db', 'Duplicate Block'), ('tma', 'Too many Attributes'), ('im', 'Insufficient Modularization')]:
+        configObject = pickle.load(open(f'detector/models/{smell[0]}Config', 'rb'))
+        principalComponents = configObject.principalComponents
+        array = principalComponents.transform(array)
 
-    if label == 0:
-        print('The provided blueprint is: Sound!')
-    if label == 1:
-        print('The provided blueprint is: Smelly..')
+        model = configObject.model
+        label = model.predict(array)
+
+        if label == 0:
+            print(f'Concerning the {smell[1]} smell, the provided blueprint is: Sound!')
+        if label == 1:
+            print(f'Concerning the {smell[1]} smell, the provided blueprint is: Smelly..')
 
 if __name__ == '__main__':
     main()
