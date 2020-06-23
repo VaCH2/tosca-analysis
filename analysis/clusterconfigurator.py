@@ -34,7 +34,6 @@ class ClusterConfigurator():
         self.distance = config[4]
         self.algorithm = config[5]
         self.model, self.labels = self.modelConfiguration(self.df)
-        self.principalComponents = None
         self.scores = self.performanceEvaluation(self.labels)
         self.cardinality = self.getCardinality(self.labels)
 
@@ -68,9 +67,8 @@ class ClusterConfigurator():
     def handlePca(self, df):
         pca = PCA(n_components=15)
         X_std = scale_df(df)
-        self.principalComponents = pca.fit_transform(X_std)
-        print('check pcamodel', self.principalComponents)
-        return pd.DataFrame(self.principalComponents, index=df.index.values)
+        principalComponents = pca.fit_transform(X_std)
+        return pd.DataFrame(principalComponents, index=df.index.values)
 
     def handleDistanceFunction(self, dist, df):
         X_std = scale_df(df)
