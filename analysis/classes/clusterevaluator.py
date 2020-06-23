@@ -77,10 +77,10 @@ class SmellEvaluator():
         return f'smell={smell}_exout={config[0]}_excor={config[1]}_pca={config[2]}_exspr={config[3]}_{config[4]}_{config[5][0]}_{config[5][1]}'
 
     def getPickle(self, smell, config):
-        return pickle.load(open(os.path.join(self.root_folder, 'temp_data', 'clustering', self.c2s(smell, config)), 'rb'))
+        return pickle.load(open(os.path.join(self.root_folder, '..', 'temp_data', 'clustering', self.c2s(smell, config)), 'rb'))
 
     def setPickle(self, smell, config, instance):
-        pickle.dump(instance, open(os.path.join(self.root_folder, 'temp_data', 'clustering', self.c2s(smell, config)), 'wb'))
+        pickle.dump(instance, open(os.path.join(self.root_folder, '..', 'temp_data', 'clustering', self.c2s(smell, config)), 'wb'))
 
 
     def configCalculationAndEvaluation(self, df, configs):
