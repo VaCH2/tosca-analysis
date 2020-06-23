@@ -135,17 +135,23 @@ imTopConfigs = [
 ]
 
 for ix, dbTopConfig in enumerate(dbTopConfigs):
-    dbTopConfigModel = ClusterConfigurator(db.df, dbTopConfig)
+    tempDf = db.df.copy(deep=True)
+    tempDf = tempDf.drop(['index'], axis=1)
+    dbTopConfigModel = ClusterConfigurator(tempDf, dbTopConfig)
     stability = dbTopConfigModel.getStability()
     print(f'DB config {ix}: {stability[0]}')
 
 for ix, tmaTopConfig in enumerate(tmaTopConfigs):
-    tmaTopConfigModel = ClusterConfigurator(tma.df, tmaTopConfig)
+    tempDf = tma.df.copy(deep=True)
+    tempDf = tempDf.drop(['index'], axis=1)
+    tmaTopConfigModel = ClusterConfigurator(tempDf, tmaTopConfig)
     stability = tmaTopConfigModel.getStability()
     print(f'TmA config {ix}: {stability[0]}')
 
 for ix, imTopConfig in enumerate(imTopConfigs):
-    imTopConfigModel = ClusterConfigurator(im.df, imTopConfig)
+    tempDf = im.df.copy(deep=True)
+    tempDf = tempDf.drop(['index'], axis=1)
+    imTopConfigModel = ClusterConfigurator(tempDf, imTopConfig)
     stability = imTopConfigModel.getStability()
     print(f'IM config {ix}: {stability[0]}')
 
@@ -201,7 +207,6 @@ def comparison():
 
     statisticalTest(scoreDict)
     boxplotCreation(scoreDict)
-    return sampleLabels, clusterLabels, ruleLabels
 
 def getGroundTruth():
     smells = pd.read_excel('results/labeling/to_label.xlsx', sheet_name='Sheet1', usecols='B,E,D,G', nrows=685, index_col=0)
@@ -294,7 +299,7 @@ def statisticalTest(scoreDict):
     for name, pair in pairs.items():
         stat, p = mannwhitneyu(np.array(scoreDict[pair[0]]), np.array(scoreDict[pair[1]]))
         uDict[name] = (stat, p)
-        effectsize, res = cliffsDelta.cliffsDelta(scoreDict[pair[0]], scoreDict[pair[1]])
+        effectsize, res = classes.cliffsDelta.cliffsDelta(scoreDict[pair[0]], scoreDict[pair[1]])
         effectDict[name] = (effectsize, res)
     
     uDf = pd.DataFrame(data=uDict).T.to_excel(os.path.join(results_folder, f'utestresults{iters}iters{subSample}percent.xlsx'))
@@ -367,4 +372,4 @@ def boxplotCreation(scoreDict):
     
     #fig.write_image(os.path.join(results_folder, f'comparison50sampleprecision{iters}iters{subSample}percent.png'))
 
-sampleLabels, clusterLabels, ruleLabels  = comparison()
+comparison()
