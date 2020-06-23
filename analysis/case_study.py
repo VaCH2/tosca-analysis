@@ -27,6 +27,15 @@ results_folder = os.path.join(root_folder, 'results', 'case_study')
 data_folder = os.path.join(root_folder, 'dataminer', 'tmp')
 temp_folder = os.path.join(root_folder, 'temp_data', 'case_study')
 
+if not os.path.exists(results_folder):
+    os.makedirs(results_folder)
+
+if not os.path.exists(data_folder):
+    os.makedirs(data_folder)
+
+if not os.path.exists(temp_folder):
+    os.makedirs(temp_folder)
+
 
 #--------------Table
 db = SmellEvaluator('db')
@@ -96,7 +105,7 @@ for i in fig['layout']['annotations']:
     i['font'] = dict(size=47)
 
 fig.show()
-fig.write_image(os.path.join(results_folder, 'configurationperformance.png'))
+#fig.write_image(os.path.join(results_folder, 'configurationperformance.png'))
 
 
 #-----------Stability
@@ -148,7 +157,7 @@ for ix, imTopConfig in enumerate(imTopConfigs):
 subSample = 70
 iters = 100
 
-def main():
+def comparison():
     blueprintLabels = getGroundTruth()
     scoreDict = {
         'rule-db-mcc' : [],
@@ -165,33 +174,37 @@ def main():
         'cluster-im-precision' : [],
     }
 
-    for i in range(iters):
-        print('Iteration: ', i)
-        sampleLabels = blueprintLabels.sample(frac=subSample/100)
+    try:
+        scoreDict = pickle.load(open(os.path.join(temp_folder, f'MCCandPrecisionFor{iters}iters{subSample}percent'), 'rb'))
 
-        for smell in ['db', 'tma', 'im']:
-            ruleLabels = getRuleLabels(sampleLabels.index, smell)
-            clusterLabels = getClusterLabels(sampleLabels.index, smell)
-            
-            #Ensure same cluster shape when outliers are dropped
-            sampleLabels = sampleLabels[sampleLabels.index.isin(clusterLabels.index)]
-            sampleLabels = sampleLabels.sort_index()
-            ruleLabels = ruleLabels[ruleLabels.index.isin(clusterLabels.index)]
+    except (OSError, IOError):
+        for i in range(iters):
+            print('Iteration: ', i)
+            sampleLabels = blueprintLabels.sample(frac=subSample/100)
 
-            scoreDict[f'rule-{smell}-mcc'].append(calculateScore('mcc', sampleLabels[smell], ruleLabels))
-            scoreDict[f'rule-{smell}-precision'].append(calculateScore('precision', sampleLabels[smell], ruleLabels))
-            scoreDict[f'cluster-{smell}-mcc'].append(calculateScore('mcc', sampleLabels[smell], clusterLabels))
-            scoreDict[f'cluster-{smell}-precision'].append(calculateScore('precision', sampleLabels[smell], clusterLabels))
+            for smell in ['db', 'tma', 'im']:
+                ruleLabels = getRuleLabels(sampleLabels.index, smell)
+                clusterLabels = getClusterLabels(sampleLabels.index, smell)
+                
+                #Ensure same cluster shape when outliers are dropped
+                sampleLabels = sampleLabels[sampleLabels.index.isin(clusterLabels.index)]
+                sampleLabels = sampleLabels.sort_index()
+                ruleLabels = ruleLabels[ruleLabels.index.isin(clusterLabels.index)]
+
+                scoreDict[f'rule-{smell}-mcc'].append(calculateScore('mcc', sampleLabels[smell], ruleLabels))
+                scoreDict[f'rule-{smell}-precision'].append(calculateScore('precision', sampleLabels[smell], ruleLabels))
+                scoreDict[f'cluster-{smell}-mcc'].append(calculateScore('mcc', sampleLabels[smell], clusterLabels))
+                scoreDict[f'cluster-{smell}-precision'].append(calculateScore('precision', sampleLabels[smell], clusterLabels))
     
-    #pickle.dump(scoreDict, open(os.path.join(temp_folder, f'MCCandPrecisionFor{iters}iters{subSample}percent'), 'wb'))
-    #scoreDict = pickle.load(open(os.path.join(temp_folder, f'MCCandPrecisionFor{iters}iters{subSample}percent'), 'rb'))
+        pickle.dump(scoreDict, open(os.path.join(temp_folder, f'MCCandPrecisionFor{iters}iters{subSample}percent'), 'wb'))  
+    
 
     statisticalTest(scoreDict)
     boxplotCreation(scoreDict)
     return sampleLabels, clusterLabels, ruleLabels
 
 def getGroundTruth():
-    smells = pd.read_excel('../results/labeling/to_label.xlsx', sheet_name='Sheet1', usecols='B,E,D,G', nrows=685, index_col=0)
+    smells = pd.read_excel('results/labeling/to_label.xlsx', sheet_name='Sheet1', usecols='B,E,D,G', nrows=685, index_col=0)
     smells = smells.drop(r'SeaCloudsEU\tosca-parser\Industry\Noart.tomcat-DC-compute-mysql-compute.yaml')
     return smells.astype(bool)
 
@@ -329,7 +342,8 @@ def boxplotCreation(scoreDict):
     for i in fig['layout']['annotations']:
        i['font'] = dict(size=47)
     fig.show()
-    fig.write_image(os.path.join(results_folder, f'comparison50sampleMCC{iters}iters{subSample}percent.png'))
+    
+    #fig.write_image(os.path.join(results_folder, f'comparison50sampleMCC{iters}iters{subSample}percent.png'))
 
 
     #Precision
@@ -350,6 +364,7 @@ def boxplotCreation(scoreDict):
     for i in fig['layout']['annotations']:
        i['font'] = dict(size=47)
     fig.show()
-    fig.write_image(os.path.join(results_folder, f'comparison50sampleprecision{iters}iters{subSample}percent.png'))
+    
+    #fig.write_image(os.path.join(results_folder, f'comparison50sampleprecision{iters}iters{subSample}percent.png'))
 
-x, y ,z  = main()
+sampleLabels, clusterLabels, ruleLabels  = comparison()
