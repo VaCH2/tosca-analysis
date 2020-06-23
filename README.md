@@ -18,7 +18,7 @@ First, install the necessary dependencies listed in the requirements.txt file. T
 Determine if a TOSCA blueprint suffers from one of the Duplicate Block, Too many Attributes, or Insufficient Modularization smell by executing the following command:
 
 ```
-python <path>/detector/clusteringdetector.py <path-to-blueprint>
+python detector/clusteringdetector.py <path-to-blueprint>
 ```
 
 ## Reproduce Research
@@ -33,24 +33,24 @@ To collect the data set used for this study, do the following:
 * If desired, change the time range for which you want to search for repositories
 * Call the script
 ```
-python  <path>/dataminer/miner.py
+python  dataminer/miner.py
 ```
 * Perform the first preprocessing by calling
 ```
-python  <path>/dataminer/file_evaluation.py
+python  dataminer/file_evaluation.py
 ```
 
 Afterwards, the obtained TOSCA blueprints can be found [here](/dataminer/tmp).
 
 ### Analyses
-The Exploratory Data Analysis creates distribution graphs, correlation matrices, and statistics tables used to explore the obtained data. To obtain them, execute the following:
+The Exploratory Data Analysis creates distribution graphs, correlation matrices, and statistics tables to explore the obtained data. To obtain them, execute the following:
 ```
-python  <path>/analysis/exploratory_data_analysis.py
+python  analysis/analysis_exploratory.py
 ```
 
 The next conducted analysis provides insight in the statistical difference between predefined groups within our data set. Again, we create graphs and tables to interpret these results.
 ```
-python  <path>/analysis/tests_of_significance_analysis.py
+python  /analysis/analysis_tests_of_significance.py
 ```
 
 ### Clustering-based Smell Detector
@@ -59,5 +59,5 @@ The clustering-based Smell Detector is covered by two main classes [ClusterConfi
 ### Case Study
 In the case study, we train a determine the best possible configuration for the data set we obtained, and report on the performance observed. To reproduce this part, call the following script by:
 ```
-python  <path>/analysis/case_study.py
+python  analysis/analysis_case_study.py
 ```
