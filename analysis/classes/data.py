@@ -2,7 +2,7 @@ import os
 import pandas as pd
 
 #calculator is the class that calculates the source code measurements upon provided TOSCA blueprints
-#from toscametrics import calculator
+from toscametrics import calculator
 import pickle
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
