@@ -10,7 +10,7 @@ from imblearn.over_sampling import RandomOverSampler
 class SmellEvaluator():
 
     root_folder = os.path.dirname(os.path.dirname( __file__ ))
-    results_folder = os.path.join(root_folder, 'results', 'clustering_models')
+    results_folder = os.path.join(root_folder, '..', 'results', 'clustering_models')
 
     if not os.path.exists(results_folder):
         os.makedirs(results_folder)
