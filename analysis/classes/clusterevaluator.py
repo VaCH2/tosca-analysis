@@ -12,6 +12,9 @@ class SmellEvaluator():
     root_folder = os.path.dirname(os.path.dirname( __file__ ))
     results_folder = os.path.join(root_folder, 'results', 'clustering_models')
 
+    if not os.path.exists(results_folder):
+        os.makedirs(results_folder)
+
     def __init__(self, smell):        
         self.smell = smell
         self.df = self.constructDf(self.smell)
@@ -26,7 +29,7 @@ class SmellEvaluator():
         return data
 
     def getSmells(self):
-        smells = pd.read_excel('../results/labeling/to_label.xlsx', sheet_name='Sheet1', usecols='B:H', nrows=685, index_col=0)
+        smells = pd.read_excel('results/labeling/to_label.xlsx', sheet_name='Sheet1', usecols='B:H', nrows=685, index_col=0)
         return smells.astype(bool)
 
     def oversampleData(self, df):
