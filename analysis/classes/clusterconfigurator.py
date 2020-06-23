@@ -67,8 +67,8 @@ class ClusterConfigurator():
     def handlePca(self, df):
         pca = PCA(n_components=15)
         X_std = scale_df(df)
-        principalComponents = pca.fit_transform(X_std)
-        return pd.DataFrame(principalComponents, index=df.index.values)
+        self.principalComponents = pca.fit_transform(X_std)
+        return pd.DataFrame(self.principalComponents, index=df.index.values)
 
     def handleDistanceFunction(self, dist, df):
         X_std = scale_df(df)
