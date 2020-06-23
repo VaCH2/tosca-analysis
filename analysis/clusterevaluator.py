@@ -74,7 +74,7 @@ class SmellEvaluator():
 
     def c2s(self, smell, config):
         '''Config to string'''
-        return f'smell={smell}_exout={config[0]}_excor={config[1]}_pca={config[2]}_exspr={config[3]}_{config[4]}_{config[5][0]}_{config[5][1]}'
+        return f'smell={smell}_exspr={config[0]}_excor={config[1]}_exout={config[2]}_pca={config[3]}_{config[4]}_{config[5][0]}_{config[5][1]}'
 
     def getPickle(self, smell, config):
         return pickle.load(open(os.path.join(self.root_folder, 'temp_data', 'clustering', self.c2s(smell, config)), 'rb'))
