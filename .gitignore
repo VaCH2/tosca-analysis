@@ -1,6 +1,8 @@
 .ipynb_checkpoints
 .vscode
-results
+results/case_study
+results/descriptive_report
 temp_data
 dataminer/tmp
 archive
+testenv
