@@ -13,7 +13,11 @@ def main():
     passes it to Gaussian Mixture Model and returns the script being smelly or sound
     regarding the three smells 'Duplicate Block', 'Too many Attributes', and 'Insufficient Modularization'.
     """
-    path = sys.argv[1]
+    try:
+        path = sys.argv[1]
+    except Exception as e:
+        print(e)
+        print('Provide a valid TOSCA blueprint and execute the script by: python <path>/clusteringdetector.py <path-to-blueprint>')
 
     metrics = calculator.MetricCalculator([path], 'tosca_and_general').getresults
     value = metrics[path]
