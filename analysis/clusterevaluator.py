@@ -91,7 +91,6 @@ class SmellEvaluator():
             try:
                 configInstance = self.getPickle(self.smell, config)
             except (OSError, IOError):
-                print(config)
                 configInstance = ClusterConfigurator(df, config)
                 self.setPickle(self.smell, config, configInstance)
             
