@@ -255,10 +255,10 @@ print(metric_properties_per_category.to_latex(index=True))
 # # Correlation matrix
 
 
-to_exclude = ['nn_entropy', 'na_entropy', 'nr_relative', 'nr_entropy',
+to_exclude = ['na_entropy', 'na_relative', 'nr_relative', 'nr_entropy',
 'nw_entropy', 'nw_relative', 'ngro_entropy', 'ngro_relative', 'npol_entropy', 'npol_relative',
-'cdgt_entropy', 'cdgt_relative', 'cdrt_entropy', 'cdat_entropy', 'cdct_entropy',
-'cddt_entropy', 'cdit_entropy', 'nif_min', 'nif_max', 'nif_mean', 'nif_median', 
+'cdgt_entropy', 'cdgt_relative', 'cdrt_entropy', 'cdrt_relative', 'cdat_entropy', 'cdat_relative', 'cdct_entropy', 'cdct_relative',
+'cddt_entropy', 'cddt_relative', 'cdit_entropy', 'cdit_relative', 'cdpt_entropy', 'cdpt_relative', 'cdnt_relative', 'nif_min', 'nif_max', 'nif_mean', 'nif_median', 
 'nc_median', 'np_median', 'nrq_median', 'td_median']
 
 #INPUT!
@@ -267,7 +267,7 @@ to_exclude = ['nn_entropy', 'na_entropy', 'nr_relative', 'nr_entropy',
 
 filtered_df = df.drop(to_exclude, axis=1)
 filtered_df.rename(columns=lambda x: f'{x.split("_")[0].upper()} {x.split("_")[1]}', inplace=True)
-correlation_matrix = filtered_df.corr()
+correlation_matrix = filtered_df.corr('spearman')
 
 #Identify which combinations hold a certain correlation coefficient
 for column in correlation_matrix.columns:
@@ -280,7 +280,7 @@ for metric in correlation_matrix.columns:
     temp_matrix = correlation_matrix.copy()
     temp_matrix = temp_matrix.drop(metric)
 
-    if (temp_matrix[metric] > 0.7).any() or (temp_matrix[metric] < -0.7).any():
+    if (temp_matrix[metric] > 0.8).any() or (temp_matrix[metric] < -0.8).any():
         continue
     else:
         correlation_matrix = correlation_matrix.drop(metric, axis=1)
@@ -326,7 +326,7 @@ fig.update_xaxes(
         )
 
 fig.show()
-# fig.write_image(os.path.join(results_folder, 'alldata_correlationplot.png'))
+fig.write_image(os.path.join(results_folder, 'alldata_correlationplot.png'))
 
 
 #----------Heatmap with subplots
@@ -337,10 +337,10 @@ relative_measurements = ['na_', 'nn_', 'nr_', 'cdnt_', 'cdrt_', 'cdat_', 'cdct_'
 
 minmax_measurements = ['nc_', 'nif_', 'np_', 'nrq_', 'td_']
 
-used_cols = relative_measurements
+used_cols = minmax_measurements
 
-cols = 8
-rows = 2 
+cols = 5
+rows = 1 
 
 fig = make_subplots(
     rows=rows,
@@ -354,7 +354,7 @@ fig = make_subplots(
 for i, column in enumerate(used_cols):
     filtered_df = df[[col for col in df.columns if column in col]]
     filtered_df.rename(columns=lambda x: x.split(column)[1], inplace=True)
-    correlation_matrix = filtered_df.corr()
+    correlation_matrix = filtered_df.corr('spearman')
 
     i += 1
     row = math.ceil(i / cols)
@@ -387,7 +387,7 @@ fig.update_xaxes(
         )
 
 fig.update_layout(
-    height=703.2,  #For relative: 1479.7 which is 3 rows. or 703.2 in 2 rows. For minmax 576.6 which is 1 row
+    height=576.6,  #For relative: 1479.7 which is 3 rows. or 703.2 in 2 rows. For minmax 576.6 which is 1 row
     width=2551.2, 
     showlegend=False,
     margin=dict(
