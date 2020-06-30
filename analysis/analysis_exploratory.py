@@ -259,7 +259,7 @@ to_exclude = ['na_entropy', 'na_relative', 'nr_relative', 'nr_entropy',
 'nw_entropy', 'nw_relative', 'ngro_entropy', 'ngro_relative', 'npol_entropy', 'npol_relative',
 'cdgt_entropy', 'cdgt_relative', 'cdrt_entropy', 'cdrt_relative', 'cdat_entropy', 'cdat_relative', 'cdct_entropy', 'cdct_relative',
 'cddt_entropy', 'cddt_relative', 'cdit_entropy', 'cdit_relative', 'cdpt_entropy', 'cdpt_relative', 'cdnt_relative', 'nif_min', 'nif_max', 'nif_mean', 'nif_median', 
-'nc_median', 'np_median', 'nrq_median', 'td_median']
+'nc_median', 'np_median', 'nrq_median', 'td_median', 'ttb_check']
 
 #INPUT!
 # only_count_cols = [col for col in df.columns if '_count' in col or '_relative' in col or '_entropy' in col]
@@ -280,13 +280,36 @@ for metric in correlation_matrix.columns:
     temp_matrix = correlation_matrix.copy()
     temp_matrix = temp_matrix.drop(metric)
 
-    if (temp_matrix[metric] > 0.8).any() or (temp_matrix[metric] < -0.8).any():
+    if (temp_matrix[metric] > 0.7).any() or (temp_matrix[metric] < -0.7).any():
         continue
     else:
         correlation_matrix = correlation_matrix.drop(metric, axis=1)
         correlation_matrix = correlation_matrix.drop(metric, axis=0)
 
+
+def discrete_colorscale(bvals, colors):
+    """
+    bvals - list of values bounding intervals/ranges of interest
+    colors - list of rgb or hex colorcodes for values in [bvals[k], bvals[k+1]],0<=k < len(bvals)-1
+    returns the plotly  discrete colorscale
+    """
+    if len(bvals) != len(colors)+1:
+        raise ValueError('len(boundary values) should be equal to  len(colors)+1')
+    bvals = sorted(bvals)     
+    nvals = [(v-bvals[0])/(bvals[-1]-bvals[0]) for v in bvals]  #normalized values
     
+    dcolorscale = [] #discrete colorscale
+    for k in range(len(colors)):
+        dcolorscale.extend([[nvals[k], colors[k]], [nvals[k+1], colors[k]]])
+    return dcolorscale    
+
+bvals = [-1, -0.7, -0.5, 0.5, 0.7, 1]
+colors = ['#FCFD01', '#FF8000', '#ffffff', '#87CEEB' , '#000064']
+dcolorsc = discrete_colorscale(bvals, colors)
+
+bvals = np.array(bvals)
+tickvals = [np.mean(bvals[k:k+2]) for k in range(len(bvals)-1)] #position with respect to bvals where ticktext is displayed
+ticktext = [f'<{bvals[1]}'] + [f'{bvals[k]}:{bvals[k+1]}' for k in range(1, len(bvals)-2)]+[f'>{bvals[-2]}']
 
 fig = go.Figure()
 
@@ -295,7 +318,10 @@ fig.add_trace(
         z=correlation_matrix.to_numpy(),
         x=correlation_matrix.columns,
         y=correlation_matrix.index,
-        colorscale='RdBu',
+        colorscale=dcolorsc,
+        colorbar = dict(thickness=25, 
+                tickvals=tickvals, 
+                ticktext=ticktext),
         zmid=0,
         xgap=10,
         ygap=10
@@ -326,7 +352,7 @@ fig.update_xaxes(
         )
 
 fig.show()
-fig.write_image(os.path.join(results_folder, 'alldata_correlationplot.png'))
+#fig.write_image(os.path.join(results_folder, 'alldata_correlationplot.png'))
 
 
 #----------Heatmap with subplots
@@ -368,7 +394,10 @@ for i, column in enumerate(used_cols):
             z=correlation_matrix.to_numpy(),
             x=correlation_matrix.columns,
             y=correlation_matrix.index,
-            colorscale='RdBu',
+            colorscale=dcolorsc,
+            colorbar = dict(thickness=25, 
+                    tickvals=tickvals, 
+                    ticktext=ticktext),
             zmid=0,
             xgap=10,
             ygap=10,
@@ -402,6 +431,7 @@ fig.update_layout(
 )
 
 fig.show()
+#fig.write_image(os.path.join(results_folder, f'minmax_correlationplot.png'))
 
 
 #----------------------------------------------------------
@@ -742,7 +772,7 @@ fig = make_subplots(
 
 for count, smell in enumerate(['ls', 'db', 'lr', 'tma', 'im', 'wm']):
     count += 1
-    
+
     fig.add_trace(
         go.Bar(
             x=smells[smell].value_counts().index.values,
