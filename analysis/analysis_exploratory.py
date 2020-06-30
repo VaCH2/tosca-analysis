@@ -742,29 +742,18 @@ fig = make_subplots(
 
 for count, smell in enumerate(['ls', 'db', 'lr', 'tma', 'im', 'wm']):
     count += 1
-
-    if smell in ['db', 'tma', 'im']:
-
-        fig.add_trace(
-            go.Bar(
-                x=smells[smell].value_counts().index.values,
-                y=smells[smell].value_counts(),
-                marker=dict(color=['rgb(210,89,89)', 'rgb(0, 0, 100)'])
-            ),
-            row=1,
-            col=count
-        )
     
-    else:
-        fig.add_trace(
-            go.Bar(
-                x=smells[smell].value_counts().index.values,
-                y=smells[smell].value_counts(),
-                marker=dict(color=['rgb(255, 207, 193)', 'rgb(157, 119, 236)'])
-            ),
-            row=1,
-            col=count
-        )
+    fig.add_trace(
+        go.Bar(
+            x=smells[smell].value_counts().index.values,
+            y=smells[smell].value_counts(),
+            marker=dict(
+                color='rgb(255, 255, 255)',
+                line=dict(color='rgb(0, 0, 0)', width=3))
+        ),
+        row=1,
+        col=count
+    )
 
 
 
@@ -778,17 +767,17 @@ fig.update_layout(
         l=0,
         r=0,
         b=0,
-        t=50
+        t=80
     ),
     paper_bgcolor='rgba(255, 255, 255, 1)', #transparant = 0,0,0,0
     plot_bgcolor='rgba(255, 255, 255, 1)',
-    font=dict(size=35)
+    font=dict(size=45)
 )
 
 fig.update_traces(texttemplate='%{y}', textposition='outside')
 
 for i in fig['layout']['annotations']:
-    i['font'] = dict(size=40)
+    i['font'] = dict(size=45)
 
 fig.update_yaxes(
     showgrid=True,
@@ -797,4 +786,4 @@ fig.update_yaxes(
 )
 
 fig.show()
-# fig.write_image(os.path.join(results_folder, 'smell_distribution.png'))
+#fig.write_image(os.path.join(results_folder, 'smell_distribution.png'))
