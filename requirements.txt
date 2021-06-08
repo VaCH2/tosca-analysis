@@ -41,7 +41,7 @@ parso==0.7.0
 patsy==0.5.1
 pbr==5.4.5
 pickleshare==0.7.5
-Pillow==7.1.2
+Pillow==8.2.0
 plotly==4.8.1
 pluggy==0.13.1
 prettytable==0.7.2
